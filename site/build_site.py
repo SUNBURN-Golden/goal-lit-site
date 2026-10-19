@@ -272,10 +272,11 @@ def work_card(w, posts_by_work):
 def post_card(p, personas, works_by, big=False):
     pe = personas[p["persona"]]; w = works_by[p["work"]]
     st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판")}
+    summary = f'<p class="card-summary">{E(p["summary"])}</p>' if big else ""
+    stats = (f'<div class="meta compact-meta">{dot(ymd(p["date"]))} · 출처 {len(p["sources"])} · 자료 {E(p["read_level"])}</div>' if big
+             else f'<p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p><div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div>')
     return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span></div>'
-            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-            f'<p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p>'
-            f'<div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div></article>')
+            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>{summary}{stats}</article>')
 
 def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
