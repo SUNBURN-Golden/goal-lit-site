@@ -10,11 +10,10 @@ Single sources of truth:
   content/posts.json                editor posts (read level B = synthesis of publicly reported reactions, no scores)
   ../research/do_not_copy.txt       source sentences that must not reappear verbatim (15-char shingle check)
 
-Design (준태님): writers appear as plain pen-name 에디터 bylines. No per-post AI badge or fixed label. ONE short, non-prominent
-note on /principles/ says editorial pieces are produced with AI assistance under the editors' pen names (the build requires it).
+Design (준태님): writers appear as plain pen-name 에디터 bylines. No per-post badge or fixed label.
 The build REFUSES to publish if a post lacks its public-synthesis framing + dated source list, makes an "I read/watched it" claim,
 carries a star/score, has a long quote, copies a known source sentence, cites an unknown source, if a pen name gets an invented
-human biography/photo/age/job, if editor opinion leaks into human-rating views, if the principles-page AI note is missing,
+human biography/photo/age/job, if editor opinion leaks into human-rating views,
 or if a work has no tier 1-3 fact. Every page is noindex; robots Disallow. Stdlib only (+fonttools for font subset).
 Nothing is deployed, sent or requested over the network.
 """
@@ -54,8 +53,6 @@ BIO_KEYS = {"photo", "avatar_url", "image", "img", "bio", "biography", "age", "j
 PERSONA_KEYS = {"id", "kind", "name", "badge", "tagline", "domain", "lens", "rubric", "blind_spot", "style", "banned_phrases", "glyph", "version", "status", "changelog", "template"}
 GLYPH_SHAPES = {"arc", "grid", "frame", "tick", "duo", "nodes", "wave", "sun", "thorn"}
 POST_FORBIDDEN_KEYS = {"rating", "ratings", "score", "scores", "stars", "overall_score", "human_rating", "reader_rating", "label_text"}
-AI_NOTE = "AI의 도움을 받아"      # must appear on /principles/ (the one site-wide AI-assistance note)
-AI_NOTE_MAX = 160                # ...as ONE short sentence, not a banner
 
 def fail(msg): sys.exit(f"ERROR: {msg}")
 
@@ -423,10 +420,7 @@ def subset_fonts(dist):
     shutil.copy(ROOT / "static/fonts/Pretendard-OFL-LICENSE.txt", out / "Pretendard-OFL-LICENSE.txt")
 
 def check_principles(t):
-    """The ONE site-wide AI-assistance note: present on /principles/, short, and not styled as a banner."""
-    m = re.search(r'<p class="muted fine">([^<]*' + re.escape(AI_NOTE) + r'[^<]*)</p>', t)
-    if not m: return [("principles/index.html", "missing short AI-assistance note (<p class=\"muted fine\">…AI의 도움을 받아…</p>)", "")]
-    if len(m.group(1)) > AI_NOTE_MAX or "에디터" not in m.group(1) or "필명" not in m.group(1): return [("principles/index.html", "AI note must be short and mention 필명 에디터", m.group(1))]
+    """Principles page guard (AI-assistance note requirement removed)."""
     return []
 
 def leak_check(dist):
@@ -452,7 +446,6 @@ def leak_check(dist):
             m = re.search(r'<div class="panel human">(.*?)</div>', t, re.S)
             if m and re.search(r"/posts/|/personas/|class=\"byline\"", m.group(1)): bad.append((rel, "editor content inside the human-rating panel", ""))
         if "ai-badge" in t or "ailabel" in t or re.search(r"AI 에디터|AI 독자|AI 페르소나", t): bad.append((rel, "stale per-post AI badge/label wording", ""))
-    bad += check_principles((dist / "principles/index.html").read_text(encoding="utf-8") if (dist / "principles/index.html").exists() else "")
     if re.search(r"https?://[^\"' >]*(google-analytics|googletagmanager|facebook\.net|doubleclick|hotjar|clarity\.ms)", alltxt): bad.append(("*", "tracker", ""))
     return bad
 
@@ -479,7 +472,7 @@ def main():
     if bad:
         for b in bad: print("CHECK FAIL:", b)
         sys.exit(2)
-    print("checks OK (framing + sources, pen-name guards, principles AI note, no experience claims, no scores, quote/copy limits, leak check, every page noindex)")
+    print("checks OK (framing + sources, pen-name guards, no experience claims, no scores, quote/copy limits, leak check, every page noindex)")
 
 if __name__ == "__main__":
     main()

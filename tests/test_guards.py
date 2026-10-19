@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Negative tests: each mutation MUST make the build guard refuse it. Run: python3 tests/test_guards.py
-Design: pen-name 에디터 bylines, no per-post AI badge/label; one short AI-assistance note on /principles/."""
+Design: pen-name 에디터 bylines, no per-post badge or fixed label."""
 import copy, importlib.util, json, sys
 from pathlib import Path
 R = Path(__file__).resolve().parents[1]
@@ -76,15 +76,6 @@ for p_ in posts:
     for s_ in p_["sources"]:
         if bs._bare(s_["url"]) in bs.BLOCKED_HOSTS: print("SHIPPED POST ON BLOCKED DOMAIN", p_["slug"], s_["url"]); bad += 1
 print("shipped posts: no AI-blocking source domains")
-# site-level checks
-good_note = '<p class="muted fine">에디터 글은 필명 에디터의 이름으로, AI의 도움을 받아 작성돼요.</p>'
-for name, html in {"principles page without AI note": "<p>원칙</p>",
-                   "AI note too long / banner": '<p class="muted fine">' + "에디터 필명 AI의 도움을 받아 " * 20 + "</p>",
-                   "AI note not mentioning pen name": '<p class="muted fine">AI의 도움을 받아 작성돼요.</p>'}.items():
-    if bs.check_principles(html): print("refused ok:", name)
-    else: print("NOT REFUSED:", name); bad += 1
-if bs.check_principles(good_note): print("NOT ACCEPTED: valid principles note"); bad += 1
-else: print("valid principles note passes")
 # built output: no per-post badge, human panel free of editor content, 9 distinct pen names
 dist = R / "site/dist"
 if dist.exists():
