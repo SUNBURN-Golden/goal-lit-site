@@ -71,7 +71,13 @@ essay_cases = {
  "essay AI mark": lambda p: p["body"].append("이 글은 AI가 도왔다."),
  "essay 인공지능 mark": lambda p: p.update(summary="인공지능 칼럼"),
  "essay star rating": lambda p: p["body"].append("★☆☆☆☆"),
- "essay 별점 text": lambda p: p["body"].append("별점 1점조차 아깝다."),
+ "essay star rating with 별점": lambda p: p["body"].append("별점 ★"),
+ "essay 평점 number": lambda p: p["body"].append("평점 1"),
+ "essay figure AI alt": lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "에곤 실레풍 삽화: AI 그림", "after": 1}]),
+ "essay figure alt without style label": lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "그림", "after": 1}]),
+ "essay figure foreign file": lambda p: p.update(figures=[{"file": "../x.webp", "alt": "클림트풍 삽화: 여인", "after": 1}]),
+ "essay figure after out of body": lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "클림트풍 삽화: 여인", "after": 9}]),
+ "essay figure extra key": lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "클림트풍 삽화: 여인", "after": 1, "src": "http://x"}]),
  "essay score number": lambda p: p.update(summary="3/5"),
  "essay rating field": lambda p: p.update(rating=1),
  "essay score field": lambda p: p.update(score=1),
@@ -85,6 +91,8 @@ essay_cases = {
 }
 for name, f in essay_cases.items(): expect_refused(name, lambda f=f: bs.validate_post(emut(f), personas, works, dnc))
 bs.validate_post(essay_base, personas, works, dnc); print("baseline essay passes")
+bs.validate_post(emut(lambda p: p["body"].append("별점 1점조차 아까운 작품이다.")), personas, works, dnc); print("essay rhetoric '별점' word accepted (no star/score)")
+bs.validate_post(emut(lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "에곤 실레풍 삽화: 정원의 식물", "after": 1}])), personas, works, dnc); print("essay figure accepted")
 shipped = json.loads((R / "site/content/posts.json").read_text(encoding="utf-8"))
 for p_ in shipped: bs.validate_post(p_, personas, works, dnc)
 print("shipped posts pass (%d)" % len(shipped))
