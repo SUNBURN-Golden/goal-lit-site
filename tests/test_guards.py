@@ -88,11 +88,14 @@ essay_cases = {
  "essay empty body": lambda p: p.update(body=[]),
  "essay promo superlative": lambda p: p["body"].append("인생작이다."),
  "essay unexpected field": lambda p: p.update(label_text="AI"),
+ "essay empty block quote": lambda p: p["body"].append("> "),
+ "essay block quotes only": lambda p: p.update(body=["> 인용만 있다."]),
 }
 for name, f in essay_cases.items(): expect_refused(name, lambda f=f: bs.validate_post(emut(f), personas, works, dnc))
 bs.validate_post(essay_base, personas, works, dnc); print("baseline essay passes")
 bs.validate_post(emut(lambda p: p["body"].append("별점 1점조차 아까운 작품이다.")), personas, works, dnc); print("essay rhetoric '별점' word accepted (no star/score)")
 bs.validate_post(emut(lambda p: p.update(figures=[{"file": "t-essay-1.webp", "alt": "에곤 실레풍 삽화: 정원의 식물", "after": 1}])), personas, works, dnc); print("essay figure accepted")
+bs.validate_post(emut(lambda p: p["body"].insert(1, "> " + "가" * 200)), personas, works, dnc); print("essay long block quote accepted (critical quotation, no 12-char limit)")
 shipped = json.loads((R / "site/content/posts.json").read_text(encoding="utf-8"))
 for p_ in shipped: bs.validate_post(p_, personas, works, dnc)
 print("shipped posts pass (%d)" % len(shipped))
@@ -122,6 +125,7 @@ if dist.exists():
         m = re.search(r'<div class="panel human">(.*?)</div>', t, re.S)
         if m and re.search(r"/posts/|/personas/|byline", m.group(1)): print("editor content in human panel", rel); bad += 1
         if rel.startswith("posts/") and "보관된 글이에요" not in t and rel.split("/")[1] not in {p_["slug"] for p_ in shipped}: print("unshipped post page in dist", rel); bad += 1
+        if 'class="detail post-detail essay"' in t and re.search(r"<p>&gt;", t): print("essay block quote rendered as plain paragraph", rel); bad += 1
         if 'class="detail post-detail essay"' in t and ("공개 자료를 정리" in t or "편집부 칼럼" not in t): print("essay page with synthesis notice / without 편집부 칼럼", rel); bad += 1
     print("built-output checks done (%d pages)" % len(txt))
 bs.validate_post(base, personas, works, dnc); print("baseline post passes")

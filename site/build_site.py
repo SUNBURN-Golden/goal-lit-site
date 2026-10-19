@@ -144,6 +144,8 @@ ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "da
 # and rating/score fields + score UI stay forbidden for every post type
 ESSAY_SCORE = re.compile(r"(★|☆|평점\s*\d|\d(\.\d)?\s*/\s*(5|10)\b|\d(\.\d)?\s*점을 (주|매)|만점)")
 ESSAY_IMG_DIR = ROOT / "static/img/essays"
+# essay block quotes ('> ' paragraphs) are exempt from quote-length / source-overlap checks: those checks only run on
+# public-synthesis posts (validate_post), never on essays. A block quote must not be empty and the body must not be quotes only.
 FIG_STYLE = re.compile(r"^(에곤 실레풍|클림트풍) 삽화: \S")
 def check_figures(p):
     pid = p.get("slug", "?"); figs = p.get("figures", [])
@@ -176,6 +178,9 @@ def validate_essay(p, personas, works):
         if m: fail(f"essay {pid}: {why}: …{txt[max(0, m.start()-15):m.end()+15]}…")
     if BIO.search(p["framing"]): fail(f"essay {pid}: biographical detail in framing")
     check_figures(p)
+    qs = [b for b in p["body"] if b.startswith(">")]
+    if any(not b.lstrip("> ").strip() for b in qs): fail(f"essay {pid}: empty block quote")
+    if len(qs) == len(p["body"]): fail(f"essay {pid}: body must not be block quotes only")
 
 def validate_post(p, personas, works, dnc):
     if p.get("type") == "essay": return validate_essay(p, personas, works)
@@ -326,7 +331,8 @@ def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
     pbw = {}
     for p in posts: pbw.setdefault(p["work"], []).append(p)
-    ordered = sorted(posts, key=lambda p: p["date"], reverse=True)
+    # newest first; same date -> the one added later to posts.json comes first
+    ordered = [p for _, p in sorted(enumerate(posts), key=lambda ip: (ip[1]["date"], ip[0]), reverse=True)]
     slug_idx = {p["slug"]: i for i, p in enumerate(ordered)}
     lead, side, rest = ordered[0], ordered[1:4], ordered[4:10]
     # ---- home: magazine front page, criticism first
@@ -419,7 +425,9 @@ def build(site, dims, personas, works, posts, human, today):
                 if (ESSAY_IMG_DIR / g["file"]).exists():
                     figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
                 else: print(f"WARN: essay {x['slug']}: figure {g['file']} missing in static/img/essays — skipped")
-            paras = "".join(f"<p>{E(t)}</p>" + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
+            # a body paragraph that starts with '> ' is a block quote (essay only; quoted for criticism, 준태님 원고 그대로)
+            def para(t): return f'<blockquote class="essay-quote"><p>{E(t[2:] if t.startswith("> ") else t[1:])}</p></blockquote>' if t.startswith(">") else f"<p>{E(t)}</p>"
+            paras = "".join(para(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
             body = f'''<div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
 <p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p>
