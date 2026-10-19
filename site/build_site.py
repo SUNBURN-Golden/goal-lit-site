@@ -394,10 +394,10 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- personas
     def pcard(p):
         return (f'<article class="card"><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline(p)}<h3 class="tight"><a href="/personas/{p["id"]}/">{E(p["name"])} — {E(p["tagline"])}</a></h3></div></div>'
-                f'<div class="loc">{E(p["domain"])}</div><div class="meta">정리 관점 v{p["version"]} · 초안</div></article>')
+                f'<div class="loc">{E(p["domain"])}</div><div class="meta">읽는 관점 v{p["version"]} · 초안</div></article>')
     eds = [p for p in personas.values() if p["kind"] == "section"]; rds = [p for p in personas.values() if p["kind"] == "angle"]
     site.add("/personas/", "에디터", "이 사이트의 필명 에디터 9명 소개.",
-        f'<div class="page"><h1>에디터</h1><p class="lead">이 사이트의 글은 필명 에디터가 써요. 공개된 기사·리뷰·후기를 출처와 함께 종합해 정리하고, 각자 &lsquo;무엇을 먼저 정리하는지&rsquo;와 <strong>약점</strong>을 공개해요. 필명이라 이력·사진 같은 개인 정보는 없어요.</p></div>'
+        f'<div class="page"><h1>에디터</h1><p class="lead">이 사이트의 칼럼은 필명 에디터가 써요. 에디터마다 작품을 읽는 관점과 <strong>약점</strong>을 공개해요. 필명이라 이력·사진 같은 개인 정보는 없어요.</p></div>'
         f'<section class="sec"><div class="sec-h"><h2>분야 담당 에디터 3</h2></div><div class="grid">{"".join(pcard(p) for p in eds)}</div></section>'
         f'<section class="sec"><div class="sec-h"><h2>관점 담당 에디터 6</h2></div><div class="grid">{"".join(pcard(p) for p in rds)}</div></section>', "personas")
     for p in personas.values():
@@ -407,10 +407,10 @@ def build(site, dims, personas, works, posts, human, today):
         log = "".join(f'<li>v{c["version"]} ({c["date"]}) {E(c["note"])}</li>' for c in p["changelog"])
         body = f'''<div class="detail"><p class="crumb"><a href="/personas/">에디터</a></p><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline(p)}<h1 class="tight">{E(p["name"])}</h1></div></div>
 <p class="lead">{E(p["tagline"])} · 필명이에요. 이력·사진은 공개하지 않아요.</p>
-<h2>정리 관점</h2><p>{E(p["lens"])}.</p><p class="muted">담당 영역: {E(p["domain"])}</p>
-<h2>정리 비중</h2><p class="muted">공개 반응을 정리할 때 영역마다 두는 비중이에요(합계 100). 작품 점수가 아니에요.</p><div class="bars">{bars}</div>
+<h2>읽는 관점</h2><p>{E(p["lens"])}.</p><p class="muted">담당 영역: {E(p["domain"])}</p>
+<h2>읽는 비중</h2><p class="muted">작품을 읽을 때 영역마다 두는 비중이에요(합계 100). 작품 점수가 아니에요.</p><div class="bars">{bars}</div>
 <div class="limits"><h3>이 에디터의 약점(공개)</h3><p>{E(p["blind_spot"])}</p></div>
-<h2>글쓰기 규칙</h2><ul class="clean">{"".join(f"<li>{E(s)}</li>" for s in p["style"])}<li>글 구성: {" → ".join(E(s) for s in p["template"])}</li><li>직접 경험 주장·별점·과장 표현은 쓰지 않아요.</li></ul>
+<h2>글쓰기 규칙</h2><ul class="clean">{"".join(f"<li>{E(s)}</li>" for s in p["style"])}<li>칼럼 구성: 주장 한 문장 → 작품 안의 근거 → 반론과 한계</li><li>직접 경험 주장·별점·과장 표현은 쓰지 않아요.</li></ul>
 <h2>쓴 글</h2><ul class="clean">{plist}</ul>
 <h2>버전 기록</h2><ul class="clean">{log}</ul></div>'''
         site.add(f'/personas/{p["id"]}/', f'{p["badge"]} {p["name"]}', f'{p["badge"]} {p["name"]} — {p["tagline"]}', body, "personas")
@@ -472,7 +472,7 @@ def build(site, dims, personas, works, posts, human, today):
                                    ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about")]:
         body = f'<div class="page">{(ROOT / f"content/pages/{slug}.html").read_text(encoding="utf-8")}</div>'
         if slug == "principles":
-            body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>에디터 글은 <strong>작품을 직접 읽거나 보고 쓴 후기가 아니에요.</strong> 공개된 평론·서평·기사를 출처와 함께 종합해요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
+            body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>칼럼마다 <strong>주장 하나</strong>가 있어요. 요약이나 반응 모음이 아니에요.</li><li><strong>사람 평점과 칼럼은 섞지 않아요.</strong> 칼럼에는 점수가 없어요.</li><li>작품 정보에서 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
         site.add(f"/{slug}/", title, desc, body, act)
     site.add("/404.html", "페이지를 찾을 수 없어요", "페이지를 찾을 수 없어요.", '<div class="page"><h1>페이지를 찾을 수 없어요</h1><p><a href="/">홈으로</a></p></div>')
     # retired posts (robots.txt audit 2026-10-17): kept out of nav/pages; the old URL shows a plain archived notice (also overwrites stale edge copies)
