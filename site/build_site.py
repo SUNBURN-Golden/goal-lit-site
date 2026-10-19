@@ -386,7 +386,7 @@ def build(site, dims, personas, works, posts, human, today):
         met = f'<h2>공개 지표</h2><p>{E(x["metrics"]["text"])} {cite_html(x["metrics"]["cite"], srcs)}</p>' if x.get("metrics") else ""
         lim = "<div class='limits'><h3>이 글의 한계</h3><ul class='clean'>" + "".join(f"<li>{E(t)}</li>" for t in x["limits"]) + "</ul></div>"
         srcl = "".join(f'<li>{E(s["outlet"])} · <a href="{E(s["url"])}" rel="noopener noreferrer">{E(s["title"])}</a> <span class="muted">({E(s["kind"])}{", " + s["date"] if s["date"] else ", 게재일 미확인"}{"; " + E(s["note"]) if s.get("note") else ""})</span></li>' for s in x["sources"])
-        body = f'''<div class="detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
+        body = f'''<div class="detail post-detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <div class="prow">{glyph(pe["glyph"]["shape"], pe["glyph"]["color"])}<div>{byline(pe)}<br><span class="muted">작성 {dot(ymd(x["date"]))} · <a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></div></div>
 <h1>{E(x["title"])}</h1>
 <p class="framing">{E(x["framing"])}</p>
