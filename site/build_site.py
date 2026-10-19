@@ -248,14 +248,12 @@ class Site:
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active):
         cur = lambda k: ' aria-current="page"' if active == k else ""
-        return ('<a class="skip" href="#main">본문으로 건너뛰기</a><div class="preview-bar">비공개 프리뷰 — 검색 노출 꺼짐(noindex) · 이 사이트의 평론 글은 필명 에디터가 공개 자료를 정리한 글이에요</div>'
-                f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a>'
-                f'<a class="pin" href="/principles/"{cur("principles")}>편집 원칙</a></div>'
-                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a>'
-                f'<a href="/authors/"{cur("authors")}>작가</a><a href="/new-books/"{cur("books")}>이번 주 신간·완결</a><a href="/personas/"{cur("personas")}>에디터</a></nav></div></header>')
+        return ('<a class="skip" href="#main">본문으로 건너뛰기</a><div class="preview-bar">비공개 프리뷰 · 검색 노출 꺼짐(noindex)</div>'
+                f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a></div>'
+                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a></nav></div></header>')
     def foot(self):
         return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">({BRAND_NOTE})</span>'
-                '<div class="flinks"><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a></div>'
+                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a></div>'
                 '<p>작품 정보는 항목마다 출처와 확인일을 붙여요. 에디터 글은 공개된 기사·평론·서평을 정리한 글이고, 작품을 직접 읽거나 보고 쓴 후기가 아니에요.</p><p>© 2026</p></div></footer>')
     def add(self, path, title, desc, body, active=""):
         self.pages[path] = self.head(title, desc) + f'<body>{self.nav(active)}<main id="main" class="wrap">{body}</main>{self.foot()}</body></html>'
@@ -269,38 +267,32 @@ def work_card(w, posts_by_work):
     who = " · ".join(x for x in (w["author"], w["platform"]) if x)
     return (f'<article class="card"><div class="chips"><span class="badge">{E(w["medium"])}</span>{gb}</div>'
             f'<h3><a href="/works/{w["slug"]}/">{E(w["title"])}</a></h3><div class="loc">{E(who) if who else "작가 미확인"} · {E(pub_label(w))}</div>'
-            f'<div class="meta">평론 {n}편 · 사람 평점 0개 · 확인일 {dot(w["verified"])}</div></article>')
+            f'<div class="meta">평론 {n}편 · 확인일 {dot(w["verified"])}</div></article>')
 
 def post_card(p, personas, works_by, big=False):
     pe = personas[p["persona"]]; w = works_by[p["work"]]
-    st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판", "중립")}
-    gb = "".join(f'<span class="badge">{E(g)}</span>' for g in w["genres"][:2])
-    return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span>{gb}</div>'
-            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><div class="loc">{E(p["summary"])}</div>'
-            f'<div class="meta">{byline(pe)} · 호평 {st["호평"]} · 비판 {st["비판"]} · 공개 자료 {len(p["sources"])}건 · 점수 없음</div></article>')
+    st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판")}
+    return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span></div>'
+            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+            f'<p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p>'
+            f'<div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div></article>')
 
 def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
     pbw = {}
     for p in posts: pbw.setdefault(p["work"], []).append(p)
     ordered = sorted(posts, key=lambda p: p["date"], reverse=True)
-    lead, side, rest = ordered[0], ordered[1:4], ordered[4:]
+    slug_idx = {p["slug"]: i for i, p in enumerate(ordered)}
+    lead, side, rest = ordered[0], ordered[1:4], ordered[4:10]
     # ---- home: magazine front page, criticism first
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
-    ed_nav = "".join(f'<a class="chip-l" href="/personas/{pe["id"]}/">{E(pe["name"])}</a>' for pe in personas.values())
-    authors = sorted({w["author"] for w in works if w["author"]})
     site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설을 공개된 평론·서평·보도 속 반응으로 읽는 평론 웹진(프리뷰). 평론 글은 필명 에디터가 공개 자료를 출처와 함께 정리한 글이에요.",
-        f'''<section class="masthead"><span class="eyebrow">PREVIEW · 평론 웹진</span><h1>작품은 이렇게 읽혔다 — 한국 문학·웹툰·웹소설 평론</h1>
-<p>소설·시·에세이부터 SF·판타지·미스터리, 웹툰과 웹소설까지. 평론가와 매체가 실제로 남긴 호평과 비판을 출처와 함께 정리해요.</p></section>
-<section class="front"><div class="front-lead"><span class="kicker">오늘의 평론</span>{post_card(lead, personas, works_by, True)}</div>
+        f'''<section class="masthead"><h1>작품은 이렇게 읽혔다 — 한국 문학·웹툰·웹소설 평론</h1>
+<p class="sub">평단·매체의 호평과 비판을 출처와 함께 정리해요</p></section>
+<section class="front"><div class="front-lead"><span class="kicker">최근 평론</span>{post_card(lead, personas, works_by, True)}<div class="cta-row"><a class="cta cta-main" href="/posts/{lead["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div>
 <div class="front-side"><span class="kicker">이어서 읽기</span>{"".join(post_card(p, personas, works_by) for p in side)}</div></section>
-<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 {len(posts)}편</a></div><div class="grid">{"".join(post_card(p, personas, works_by) for p in rest)}</div></section>
-<section class="sec"><div class="sec-h"><h2>에디터별로 읽기</h2><a href="/personas/">에디터 9명 소개</a></div><div class="chip-row">{ed_nav}</div><p class="muted">에디터는 필명이에요. 각자 무엇을 먼저 정리하는지와 약점을 공개해요.</p></section>
-<section class="sec"><div class="sec-h"><h2>작품</h2><a href="/works/">전체 {len(works)}편</a></div><div class="grid">{"".join(work_card(w, pbw) for w in works[:6])}</div></section>
-<section class="sec"><div class="sec-h"><h2>장르</h2><a href="/genres/">전체 보기</a></div><div class="chip-row">{genre_nav}</div></section>
-<section class="sec"><div class="sec-h"><h2>작가</h2><a href="/authors/">전체 {len(authors)}명</a></div><p class="muted">작품 페이지에 확인된 작가만 올려요.</p></section>
-<section class="sec"><div class="sec-h"><h2>이번 주 신간·완결</h2><a href="/new-books/">준비 중</a></div><div class="todo">신간·완결 코너는 아직 열지 않았어요. 공식 서지 API와 플랫폼 공지를 확인할 수 있게 되면 열어요. 특집 에세이·칼럼 코너도 사람 검수 절차가 갖춰진 뒤에 열어요.</div></section>
-<section class="band"><h2>이렇게 달라요</h2><ul class="clean"><li>에디터 글은 <strong>작품을 직접 읽거나 보고 쓴 후기가 아니에요.</strong> 공개된 평론·서평·기사를 출처와 함께 종합해요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>''', "home")
+<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="grid">{"".join(post_card(p, personas, works_by) for p in rest)}</div></section>
+<section class="sec"><div class="sec-h"><h2>찾기</h2><a href="/works/">작품 전체 {len(works)}편</a></div><div class="chip-row">{genre_nav}</div></section>''', "home")
     # ---- reviews index
     site.add("/reviews/", "평론", "필명 에디터가 공개된 평론·서평·기사를 종합해 정리한 글 모음.",
         f'<div class="page wide"><h1>평론</h1><p class="lead">공개된 평론·서평·보도 속 호평과 비판을 작품별로 정리한 글이에요. {len(posts)}편이고, 점수는 없어요.</p></div><div class="grid">' + "".join(post_card(p, personas, works_by) for p in ordered) + '</div>', "reviews")
@@ -374,6 +366,16 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- posts
     for x in posts:
         pe = personas[x["persona"]]; w = works_by[x["work"]]; srcs = {s["id"]: s for s in x["sources"]}
+        by_stance = {stance: [o for o in x["opinions"] if o["stance"] == stance] for stance in ("호평", "비판", "중립")}
+        glance_items = []
+        if by_stance["호평"]: glance_items.append(("호평", by_stance["호평"][0]["topic"]))
+        if by_stance["비판"]: glance_items.append(("비판", by_stance["비판"][0]["topic"]))
+        third = (by_stance["중립"][:1] or by_stance["비판"][1:2] or by_stance["호평"][1:2])
+        if third: glance_items.append(("쟁점", third[0]["topic"]))
+        glance = ('<ul class="glance">' + "".join(f'<li><b>{label}</b> {E(topic)}</li>' for label, topic in glance_items) + '</ul>') if glance_items else ""
+        same_work = [p for p in pbw.get(x["work"], []) if p["slug"] != x["slug"]]
+        if same_work: nxt = same_work[0]
+        else: nxt = ordered[(slug_idx[x["slug"]] + 1) % len(ordered)]
         secs = "".join(f'<h2>{E(s["h"])}</h2>' + "".join(f"<p>{E(t)}</p>" for t in s["p"]) + (f'<p>{cite_html(s["cite"], srcs)}</p>' if s["cite"] else "") for s in x["sections"])
         if x["opinions"]:
             cls = {"호평": "st-good", "비판": "st-bad", "중립": "st-mid"}
@@ -384,12 +386,12 @@ def build(site, dims, personas, works, posts, human, today):
         lim = "<div class='limits'><h3>이 글의 한계</h3><ul class='clean'>" + "".join(f"<li>{E(t)}</li>" for t in x["limits"]) + "</ul></div>"
         srcl = "".join(f'<li>{E(s["outlet"])} · <a href="{E(s["url"])}" rel="noopener noreferrer">{E(s["title"])}</a> <span class="muted">({E(s["kind"])}{", " + s["date"] if s["date"] else ", 게재일 미확인"}{"; " + E(s["note"]) if s.get("note") else ""})</span></li>' for s in x["sources"])
         body = f'''<div class="detail post-detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
-<div class="prow">{glyph(pe["glyph"]["shape"], pe["glyph"]["color"])}<div>{byline(pe)}<br><span class="muted">작성 {dot(ymd(x["date"]))} · <a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></div></div>
-<h1>{E(x["title"])}</h1>
+<h1>{E(x["title"])}</h1>{glance}
+<p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p><details class="meta-more"><summary>정리 관점·검수 상태</summary><span><a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></details>
 <p class="framing">{E(x["framing"])}</p>
 {secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않아요.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여줘요.</p></div></div>
 {lim}<h2>참고한 공개 자료</h2><ul class="clean">{srcl}</ul>
-<div class="verify"><p>잘못 요약된 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주세요. 이 글에는 광고나 제휴 링크가 없어요.</p></div></div>'''
+<div class="verify"><p>잘못 요약된 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주세요. 이 글에는 광고나 제휴 링크가 없어요.</p></div><p class="next"><a href="/posts/{nxt["slug"]}/">다음 글: {E(nxt["title"])}</a></p></div>'''
         site.add(f'/posts/{x["slug"]}/', x["title"], x["summary"], body, "reviews")
     # ---- new books / completions stub
     site.add("/new-books/", "이번 주 신간·완결", "이번 주 신간·완결 코너는 준비 중이에요.",
@@ -398,7 +400,10 @@ def build(site, dims, personas, works, posts, human, today):
     for slug, title, desc, act in [("principles", "편집 원칙", "필명 에디터 글의 작성 원칙(초안).", "principles"), ("sources", "출처 등급", "출처 등급 설명.", "about"),
                                    ("ads", "광고·제휴 표기", "광고·제휴 표시 원칙(초안).", "about"), ("privacy", "개인정보 처리 안내", "추적 도구 없이 운영(초안).", "about"),
                                    ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about")]:
-        site.add(f"/{slug}/", title, desc, f'<div class="page">{(ROOT / f"content/pages/{slug}.html").read_text(encoding="utf-8")}</div>', act)
+        body = f'<div class="page">{(ROOT / f"content/pages/{slug}.html").read_text(encoding="utf-8")}</div>'
+        if slug == "principles":
+            body += '''<section class="band"><h2>이렇게 달라요</h2><ul class="clean"><li>에디터 글은 <strong>작품을 직접 읽거나 보고 쓴 후기가 아니에요.</strong> 공개된 평론·서평·기사를 출처와 함께 종합해요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
+        site.add(f"/{slug}/", title, desc, body, act)
     site.add("/404.html", "페이지를 찾을 수 없어요", "페이지를 찾을 수 없어요.", '<div class="page"><h1>페이지를 찾을 수 없어요</h1><p><a href="/">홈으로</a></p></div>')
     # retired posts (robots.txt audit 2026-10-17): kept out of nav/pages; the old URL shows a plain archived notice (also overwrites stale edge copies)
     for old in ("vegetarian-translation-debate", "gray-human-reviews"):
