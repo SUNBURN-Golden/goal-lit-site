@@ -369,7 +369,7 @@ def build(site, dims, personas, works, posts, human, today):
     for w in works:
         if w["author"]: by_author.setdefault(w["author"], []).append(w)
     arows = "".join(f'<article class="card"><h3>{E(a)}</h3><p class="loc">' + " · ".join(f'<a href="/works/{w["slug"]}/">{E(w["title"])}</a>' for w in ws) + '</p></article>' for a, ws in sorted(by_author.items()))
-    site.add("/authors/", "작가", "작품 페이지에서 확인된 작가 목록.", f'<div class="page wide"><h1>작가</h1><p class="lead">이 사이트에 올라온 작품의 작가예요. 필명은 필명 그대로 적고, 작가 소개문은 따로 쓰지 않아요.</p></div><div class="grid">{arows}</div>', "authors")
+    site.add("/authors/", "작가", "작품 페이지에서 확인한 작가 목록이에요.", f'<div class="page wide"><h1>작가</h1><p class="lead">이 사이트에 올라온 작품의 작가예요. 필명은 필명 그대로 적고, 작가 소개문은 따로 쓰지 않아요.</p></div><div class="grid">{arows}</div>', "authors")
     # ---- personas
     def pcard(p):
         return (f'<article class="card"><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline(p)}<h3 class="tight"><a href="/personas/{p["id"]}/">{E(p["name"])} — {E(p["tagline"])}</a></h3></div></div>'
