@@ -212,3 +212,5 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .essay-body p{line-height:1.85;margin:0 0 1.2em}
 .essay-fig{margin:2em 0}
 .essay-fig img{display:block;width:100%;height:auto;border-radius:8px}
+.essay-quote{margin:1.6em 0;padding:.2em 0 .2em 1.1em;border-left:3px solid currentColor;opacity:.9}
+.essay-quote p{margin:0;line-height:1.85}
