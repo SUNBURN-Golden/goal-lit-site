@@ -438,7 +438,7 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- new books / completions stub
     site.add("/new-books/", "이번 주 신간·완결", "이번 주 신간·완결 코너는 준비 중이에요.",
         '''<div class="page"><h1>이번 주 신간·완결</h1><p class="muted">준비 중 · 비공개 프리뷰</p><p class="lead">신간 도서와 웹툰·웹소설 완결 소식은 아직 열지 않았어요. 지어낸 목록으로 채우지 않아요.</p>
-<div class="todo"><ul class="clean"><li>자료 출처 후보: 국립중앙도서관 ISBN 서지 API(인증키 신청 필요), 출판사·플랫폼의 공식 신간·완결 공지(수동 확인).</li><li>열리면 항목마다 출처·확인일을 붙이고, 평론은 서평·보도에 인용된 반응이 있을 때만 붙여요.</li></ul></div></div>''', "books")
+<div class="todo"><ul class="clean"><li>자료 출처 후보: 국립중앙도서관 ISBN 서지 API(인증키 신청 필요), 출판사·플랫폼의 공식 신간·완결 공지(수동 확인)예요.</li><li>열리면 항목마다 출처·확인일을 붙이고, 평론은 서평·보도에 인용된 반응이 있을 때만 붙여요.</li></ul></div></div>''', "books")
     for slug, title, desc, act in [("principles", "편집 원칙", "필명 에디터 글의 작성 원칙(초안).", "principles"), ("sources", "출처 등급", "출처 등급 설명.", "about"),
                                    ("ads", "광고·제휴 표기", "광고·제휴 표시 원칙(초안).", "about"), ("privacy", "개인정보 처리 안내", "추적 도구 없이 운영(초안).", "about"),
                                    ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about")]:
