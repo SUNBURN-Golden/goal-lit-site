@@ -139,7 +139,21 @@ def post_text(p):
     return "\n".join(parts)
 
 AI_MARK = re.compile(r"(?<![A-Za-z])AI(?![A-Za-z])|인공지능|생성형")
-ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "date", "summary", "framing", "body"}
+ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "date", "summary", "framing", "body", "figures"}
+# essays may use the word 별점 as rhetoric (준태님 원고), so the essay text check drops it; stars/score numbers stay refused,
+# and rating/score fields + score UI stay forbidden for every post type
+ESSAY_SCORE = re.compile(r"(★|☆|평점\s*\d|\d(\.\d)?\s*/\s*(5|10)\b|\d(\.\d)?\s*점을 (주|매)|만점)")
+ESSAY_IMG_DIR = ROOT / "static/img/essays"
+FIG_STYLE = re.compile(r"^(에곤 실레풍|클림트풍) 삽화: \S")
+def check_figures(p):
+    pid = p.get("slug", "?"); figs = p.get("figures", [])
+    if not isinstance(figs, list) or len(figs) > 4: fail(f"essay {pid}: figures must be a list of at most 4")
+    for g in figs:
+        if set(g) != {"file", "alt", "after"}: fail(f"essay {pid}: figure needs exactly file/alt/after")
+        if not re.fullmatch(re.escape(pid) + r"-\d\.webp", g["file"]): fail(f"essay {pid}: figure file must be {pid}-N.webp")
+        if not FIG_STYLE.match(g["alt"]) or len(g["alt"]) > 80: fail(f"essay {pid}: figure alt must be short and start with '에곤 실레풍 삽화:' or '클림트풍 삽화:'")
+        if AI_MARK.search(g["alt"]): fail(f"essay {pid}: AI mark in figure alt")
+        if not isinstance(g["after"], int) or not 1 <= g["after"] < len(p["body"]): fail(f"essay {pid}: figure 'after' must point inside the body")
 def validate_essay(p, personas, works):
     """type=essay: an editorial column written by the editors themselves (not a public-reaction synthesis), so the
     synthesis rules (framing wording, source list, cited opinions, 12-char quote limit, limits section) do not apply.
@@ -157,10 +171,11 @@ def validate_essay(p, personas, works):
     if not p.get("title") or not p.get("summary") or not p.get("body") or not all(isinstance(x, str) and x.strip() for x in p["body"]): fail(f"essay {pid}: needs title, summary and body paragraphs")
     ymd(p["date"])
     txt = "\n".join([p["title"], p["summary"], p["framing"], *p["body"]])
-    for rx, why in ((SCORE, "score/star rating"), (AI_MARK, "AI mark"), (PROMO, "promotional superlative")):
+    for rx, why in ((ESSAY_SCORE, "score/star rating"), (AI_MARK, "AI mark"), (PROMO, "promotional superlative")):
         m = rx.search(txt)
         if m: fail(f"essay {pid}: {why}: …{txt[max(0, m.start()-15):m.end()+15]}…")
     if BIO.search(p["framing"]): fail(f"essay {pid}: biographical detail in framing")
+    check_figures(p)
 
 def validate_post(p, personas, works, dnc):
     if p.get("type") == "essay": return validate_essay(p, personas, works)
@@ -399,7 +414,12 @@ def build(site, dims, personas, works, posts, human, today):
         if x.get("type") == "essay":
             others = [p for p in ordered if p["slug"] != x["slug"]]
             nxt = f'<p class="next"><a href="/posts/{others[0]["slug"]}/">다음 글: {E(others[0]["title"])}</a></p>' if others else ""
-            paras = "".join(f"<p>{E(t)}</p>" for t in x["body"])
+            figs = {}
+            for g in x.get("figures", []):
+                if (ESSAY_IMG_DIR / g["file"]).exists():
+                    figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
+                else: print(f"WARN: essay {x['slug']}: figure {g['file']} missing in static/img/essays — skipped")
+            paras = "".join(f"<p>{E(t)}</p>" + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
             body = f'''<div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
 <p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p>
@@ -492,8 +512,12 @@ def leak_check(dist):
                 if "편집부 칼럼" not in t: bad.append((rel, "essay without 편집부 칼럼 label", ""))
                 if AI_MARK.search(re.sub(r"<[^>]+>", " ", t.split('<main', 1)[-1])): bad.append((rel, "AI mark on essay page", ""))
             elif "참고한 공개 자료" not in t or "rel=\"noopener noreferrer\"" not in t: bad.append((rel, "post without source list", ""))
-            if SCORE.search(re.sub(r"<[^>]+>", " ", t)): bad.append((rel, "score on editor post page", ""))
-        if rel.startswith(("posts/", "personas/")) and "<img" in t: bad.append((rel, "image on persona/post page (no photos for pen names)", ""))
+            is_essay = 'class="detail post-detail essay"' in t
+            if (ESSAY_SCORE if is_essay else SCORE).search(re.sub(r"<[^>]+>", " ", t)): bad.append((rel, "score on editor post page", ""))
+            if is_essay:
+                for im in re.findall(r"<img[^>]*>", t):
+                    if not re.search(r'src="/assets/img/essays/[a-z0-9-]+-\d\.webp"', im) or not re.search(r'alt="[^"]+"', im) or AI_MARK.search(im): bad.append((rel, "essay image must be a local essay illustration with alt (no AI mark)", im[:80]))
+        if (rel.startswith("personas/") or (rel.startswith("posts/") and 'class="detail post-detail essay"' not in t)) and "<img" in t: bad.append((rel, "image on persona/post page (no photos for pen names)", ""))
         if rel.startswith("works/") and rel != "works/index.html":
             m = re.search(r'<div class="panel human">(.*?)</div>', t, re.S)
             if m and re.search(r"/posts/|/personas/|class=\"byline\"", m.group(1)): bad.append((rel, "editor content inside the human-rating panel", ""))
@@ -513,6 +537,7 @@ def main():
         p.parent.mkdir(parents=True, exist_ok=True); p.write_text(h, encoding="utf-8")
     (dist / "assets").mkdir(); shutil.copytree(ROOT / "static/css", dist / "assets/css")
     if (ROOT / "static/js").exists(): shutil.copytree(ROOT / "static/js", dist / "assets/js")
+    if (ROOT / "static/img").exists(): shutil.copytree(ROOT / "static/img", dist / "assets/img")
     shutil.copy(ROOT / "static/favicon.svg", dist / "favicon.svg")
     (dist / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
     (dist / "_headers").write_text("/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
