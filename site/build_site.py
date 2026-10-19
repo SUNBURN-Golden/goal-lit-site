@@ -381,7 +381,7 @@ def build(site, dims, personas, works, posts, human, today):
         if x["opinions"]:
             cls = {"호평": "st-good", "비판": "st-bad", "중립": "st-mid"}
             ops = "".join(f'<li><span class="stance {cls[o["stance"]]}">{o["stance"]}</span><strong>{E(o["topic"])}</strong><br>{E(o["gist"])} {cite_html(o["cite"], srcs)}</li>' for o in x["opinions"])
-            opsb = f'<h2>평가가 갈리는 지점</h2><p class="muted">평론·서평·기사에 담긴 의견을 다시 정리한 것이에요. 원문을 옮기지 않았어요.</p><ul class="ops">{ops}</ul>'
+            opsb = f'<h2>평가가 갈리는 지점</h2><p class="muted">평론·서평·기사에 담긴 의견을 다시 정리했다. 원문을 옮기지 않았다.</p><ul class="ops">{ops}</ul>'
         else: opsb = f'<h2>공개 반응</h2><div class="todo">{E(x.get("no_reaction_notice", "반응 없음"))}</div>'
         met = f'<h2>공개 지표</h2><p>{E(x["metrics"]["text"])} {cite_html(x["metrics"]["cite"], srcs)}</p>' if x.get("metrics") else ""
         lim = "<div class='limits'><h3>이 글의 한계</h3><ul class='clean'>" + "".join(f"<li>{E(t)}</li>" for t in x["limits"]) + "</ul></div>"
@@ -390,9 +390,9 @@ def build(site, dims, personas, works, posts, human, today):
 <h1>{E(x["title"])}</h1>{glance}
 <p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p><details class="meta-more"><summary>정리 관점·검수 상태</summary><span><a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></details>
 <p class="framing">{E(x["framing"])}</p>
-{secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않아요.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여줘요.</p></div></div>
+{secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않는다.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여 준다.</p></div></div>
 {lim}<h2>참고한 공개 자료</h2><ul class="clean">{srcl}</ul>
-<div class="verify"><p>잘못 요약된 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주세요. 이 글에는 광고나 제휴 링크가 없어요.</p></div><p class="next"><a href="/posts/{nxt["slug"]}/">다음 글: {E(nxt["title"])}</a></p></div>'''
+<div class="verify"><p>잘못 요약된 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주면 확인한다. 이 글에는 광고나 제휴 링크가 없다.</p></div><p class="next"><a href="/posts/{nxt["slug"]}/">다음 글: {E(nxt["title"])}</a></p></div>'''
         site.add(f'/posts/{x["slug"]}/', x["title"], x["summary"], body, "reviews")
     # ---- new books / completions stub
     site.add("/new-books/", "이번 주 신간·완결", "이번 주 신간·완결 코너는 준비 중이다.",
