@@ -138,7 +138,32 @@ def post_text(p):
     if p.get("metrics"): parts.append(p["metrics"]["text"])
     return "\n".join(parts)
 
+AI_MARK = re.compile(r"(?<![A-Za-z])AI(?![A-Za-z])|인공지능|생성형")
+ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "date", "summary", "framing", "body"}
+def validate_essay(p, personas, works):
+    """type=essay: an editorial column written by the editors themselves (not a public-reaction synthesis), so the
+    synthesis rules (framing wording, source list, cited opinions, 12-char quote limit, limits section) do not apply.
+    Still enforced: known pen name + work, no rating/score fields or star/score text, no AI marks, no promo superlatives,
+    framing label '편집부 칼럼'; built pages still need noindex and pass the personal-info leak check."""
+    pid = p.get("slug", "?")
+    pe = personas.get(p.get("persona")) or fail(f"essay {pid}: unknown persona")
+    if p.get("work") not in {w["slug"] for w in works}: fail(f"essay {pid}: unknown work")
+    bad_keys = POST_FORBIDDEN_KEYS & set(p)
+    if bad_keys: fail(f"essay {pid}: forbidden field(s) {sorted(bad_keys)}")
+    extra = set(p) - ESSAY_KEYS
+    if extra: fail(f"essay {pid}: unexpected field(s) {sorted(extra)}")
+    if p.get("framing") != "편집부 칼럼": fail(f"essay {pid}: framing must be the plain label '편집부 칼럼'")
+    if p.get("persona_version") != pe["version"]: fail(f"essay {pid}: persona_version mismatch")
+    if not p.get("title") or not p.get("summary") or not p.get("body") or not all(isinstance(x, str) and x.strip() for x in p["body"]): fail(f"essay {pid}: needs title, summary and body paragraphs")
+    ymd(p["date"])
+    txt = "\n".join([p["title"], p["summary"], p["framing"], *p["body"]])
+    for rx, why in ((SCORE, "score/star rating"), (AI_MARK, "AI mark"), (PROMO, "promotional superlative")):
+        m = rx.search(txt)
+        if m: fail(f"essay {pid}: {why}: …{txt[max(0, m.start()-15):m.end()+15]}…")
+    if BIO.search(p["framing"]): fail(f"essay {pid}: biographical detail in framing")
+
 def validate_post(p, personas, works, dnc):
+    if p.get("type") == "essay": return validate_essay(p, personas, works)
     pid = p.get("slug", "?")
     pe = personas.get(p["persona"]) or fail(f"post {pid}: unknown persona")
     if p["work"] not in {w["slug"] for w in works}: fail(f"post {pid}: unknown work")
@@ -254,7 +279,7 @@ class Site:
     def foot(self):
         return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">({BRAND_NOTE})</span>'
                 '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a></div>'
-                '<p>작품 정보는 항목마다 출처와 확인일을 붙인다. 에디터 글은 공개된 기사·평론·서평을 정리한 글이고, 작품을 직접 읽거나 보고 쓴 후기가 아니다.</p><p>© 2026</p></div></footer>')
+                '<p>작품 정보는 항목마다 출처와 확인일을 붙인다. 평론은 편집부 칼럼이다. 점수는 매기지 않는다.</p><p>© 2026</p></div></footer>')
     def add(self, path, title, desc, body, active=""):
         self.pages[path] = self.head(title, desc) + f'<body>{self.nav(active)}<main id="main" class="wrap">{body}</main>{self.foot()}</body></html>'
 
@@ -271,6 +296,10 @@ def work_card(w, posts_by_work):
 
 def post_card(p, personas, works_by, big=False):
     pe = personas[p["persona"]]; w = works_by[p["work"]]
+    if p.get("type") == "essay":
+        summary = f'<p class="card-summary">{E(p["summary"])}</p>' if big else ""
+        return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span><span class="badge">{E(p["framing"])}</span></div>'
+                f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>{summary}<div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div></article>')
     st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판")}
     summary = f'<p class="card-summary">{E(p["summary"])}</p>' if big else ""
     stats = (f'<div class="meta compact-meta">{dot(ymd(p["date"]))} · 출처 {len(p["sources"])} · 자료 {E(p["read_level"])}</div>' if big
@@ -287,16 +316,16 @@ def build(site, dims, personas, works, posts, human, today):
     lead, side, rest = ordered[0], ordered[1:4], ordered[4:10]
     # ---- home: magazine front page, criticism first
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
-    site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설을 공개된 평론·서평·보도 속 반응으로 읽는 평론 웹진(프리뷰). 평론 글은 필명 에디터가 공개 자료를 출처와 함께 정리한 글이다.",
+    site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진(프리뷰).",
         f'''<section class="masthead"><h1>작품은 이렇게 읽혔다 — 한국 문학·웹툰·웹소설 평론</h1>
-<p class="sub">평단·매체의 호평과 비판을 출처와 함께 정리한다</p></section>
-<section class="front"><div class="front-lead"><span class="kicker">최근 평론</span>{post_card(lead, personas, works_by, True)}<div class="cta-row"><a class="cta cta-main" href="/posts/{lead["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div>
-<div class="front-side"><span class="kicker">이어서 읽기</span>{"".join(post_card(p, personas, works_by) for p in side)}</div></section>
-<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="grid">{"".join(post_card(p, personas, works_by) for p in rest)}</div></section>
+<p class="sub">작품을 끝까지 따져 묻는 평론</p></section>
+<section class="front{"" if side else " solo"}"><div class="front-lead"><span class="kicker">최근 평론</span>{post_card(lead, personas, works_by, True)}<div class="cta-row"><a class="cta cta-main" href="/posts/{lead["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div>
+{f'<div class="front-side"><span class="kicker">이어서 읽기</span>{"".join(post_card(p, personas, works_by) for p in side)}</div>' if side else ""}</section>
+{f'<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="grid">{"".join(post_card(p, personas, works_by) for p in rest)}</div></section>' if rest else ""}
 <section class="sec"><div class="sec-h"><h2>찾기</h2><a href="/works/">작품 전체 {len(works)}편</a></div><div class="chip-row">{genre_nav}</div></section>''', "home")
     # ---- reviews index
-    site.add("/reviews/", "평론", "필명 에디터가 공개된 평론·서평·기사를 종합해 정리한 글 모음.",
-        f'<div class="page wide"><h1>평론</h1><p class="lead">공개된 평론·서평·보도에 실린 호평과 비판을 작품별로 정리한 글이다. 모두 {len(posts)}편, 점수는 없다.</p></div><div class="grid">' + "".join(post_card(p, personas, works_by) for p in ordered) + '</div>', "reviews")
+    site.add("/reviews/", "평론", "Goal Lit 편집부 평론 모음.",
+        f'<div class="page wide"><h1>평론</h1><p class="lead">편집부 평론 {len(posts)}편이다. 점수는 없다.</p></div><div class="grid">' + "".join(post_card(p, personas, works_by) for p in ordered) + '</div>', "reviews")
     # ---- works
     groups = "".join(f'<section class="sec"><div class="sec-h"><h2>{E(m)}</h2></div><div class="grid">' + "".join(work_card(w, pbw) for w in works if w["medium"] == m) + '</div></section>' for m in MEDIUM_ORDER if any(w["medium"] == m for w in works))
     site.add("/works/", "작품", "소설·시·에세이·웹툰·웹소설을 작품별로 모았다.",
@@ -318,7 +347,7 @@ def build(site, dims, personas, works, posts, human, today):
         body = f'''<div class="detail"><p class="crumb"><a href="/works/">작품</a> › {E(w["medium"])}</p>
 <div class="chips"><span class="badge">{E(w["medium"])}</span>{genre_chips(w["genres"])}</div><h1>{E(w["title"])}</h1><p class="muted">{E(w["kind"])} · {E(who) if who else "작가 미확인"} · {E(pub_label(w))}</p>
 <p class="lead">{E(w["summary"])}</p>{TIERKEY}
-<h2>평론</h2><div class="panel editors"><h3>에디터의 글</h3>{aibody}<p class="muted">에디터 글에는 점수가 없다. 공개된 평론·서평·기사를 정리한 글이다.</p></div>
+<h2>평론</h2><div class="panel editors"><h3>에디터의 글</h3>{aibody}<p class="muted">에디터 글에는 점수가 없다.</p></div>
 <h2>작품 정보</h2>{facts_table(w["facts"])}{rel}
 <h2>사람 평점</h2><div class="panel human"><h3>사람 평점</h3>{hbody}<p class="muted">사람이 직접 남긴 평점만 센다. 에디터 글과 의견은 여기에 넣지 않는다.</p></div>
 {unv}
@@ -366,7 +395,19 @@ def build(site, dims, personas, works, posts, human, today):
         site.add(f'/personas/{p["id"]}/', f'{p["badge"]} {p["name"]}', f'{p["badge"]} {p["name"]} — {p["tagline"]}', body, "personas")
     # ---- posts
     for x in posts:
-        pe = personas[x["persona"]]; w = works_by[x["work"]]; srcs = {s["id"]: s for s in x["sources"]}
+        pe = personas[x["persona"]]; w = works_by[x["work"]]
+        if x.get("type") == "essay":
+            others = [p for p in ordered if p["slug"] != x["slug"]]
+            nxt = f'<p class="next"><a href="/posts/{others[0]["slug"]}/">다음 글: {E(others[0]["title"])}</a></p>' if others else ""
+            paras = "".join(f"<p>{E(t)}</p>" for t in x["body"])
+            body = f'''<div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
+<h1>{E(x["title"])}</h1>
+<p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p>
+<p class="framing">{E(x["framing"])}</p>
+<div class="essay-body">{paras}</div>
+<div class="verify"><p>사실관계가 다른 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주면 확인한다. 이 글에는 광고나 제휴 링크가 없다.</p></div>{nxt}</div>'''
+            site.add(f'/posts/{x["slug"]}/', x["title"], x["summary"], body, "reviews"); continue
+        srcs = {s["id"]: s for s in x["sources"]}
         by_stance = {stance: [o for o in x["opinions"] if o["stance"] == stance] for stance in ("호평", "비판", "중립")}
         glance_items = []
         if by_stance["호평"]: glance_items.append(("호평", by_stance["호평"][0]["topic"]))
@@ -441,11 +482,16 @@ def leak_check(dist):
         if 'content="noindex,nofollow"' not in t: bad.append((rel, "missing noindex", ""))
         if "각색 트래커" in t: bad.append((rel, "stale 각색 트래커 wording (direction reset: works + 평론 first)", ""))
         if re.search(r'style="', t): bad.append((rel, "inline style attribute (blocked by CSP style-src self)", ""))
-        if rel == "index.html" and t.find('class="front"') > t.find('class="grid"') and 'class="front"' in t: bad.append((rel, "home must lead with editor 평론", ""))
-        if rel == "index.html" and 'class="front"' not in t: bad.append((rel, "home lacks the 평론-first front page", ""))
+        if rel == "index.html":
+            fi = t.find('class="front'); gi = t.find('class="grid"')
+            if fi < 0: bad.append((rel, "home lacks the 평론-first front page", ""))
+            elif gi >= 0 and fi > gi: bad.append((rel, "home must lead with editor 평론", ""))
         if rel.startswith("posts/") and "보관된 글이에요" not in t:
             if 'class="byline"' not in t or 'class="framing"' not in t: bad.append((rel, "post without 에디터 byline/framing", ""))
-            if "참고한 공개 자료" not in t or "rel=\"noopener noreferrer\"" not in t: bad.append((rel, "post without source list", ""))
+            if 'class="detail post-detail essay"' in t:
+                if "편집부 칼럼" not in t: bad.append((rel, "essay without 편집부 칼럼 label", ""))
+                if AI_MARK.search(re.sub(r"<[^>]+>", " ", t.split('<main', 1)[-1])): bad.append((rel, "AI mark on essay page", ""))
+            elif "참고한 공개 자료" not in t or "rel=\"noopener noreferrer\"" not in t: bad.append((rel, "post without source list", ""))
             if SCORE.search(re.sub(r"<[^>]+>", " ", t)): bad.append((rel, "score on editor post page", ""))
         if rel.startswith(("posts/", "personas/")) and "<img" in t: bad.append((rel, "image on persona/post page (no photos for pen names)", ""))
         if rel.startswith("works/") and rel != "works/index.html":

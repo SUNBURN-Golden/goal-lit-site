@@ -62,6 +62,32 @@ def expect_refused(name, fn):
     except SystemExit as e: print("refused ok:", name, "->", str(e)[:70])
 for name, f in post_cases.items(): expect_refused(name, lambda f=f: bs.validate_post(mut(f), personas, works, dnc))
 for name, f in persona_cases.items(): expect_refused(name, lambda f=f: bs.check_persona(pmut(f)))
+# essay type (편집부 칼럼, 준태님 원고 2026-10-19): synthesis rules do not apply, but AI marks / scores / ratings / promo / unknown persona-work are refused
+essay_base = {"slug": "t-essay", "type": "essay", "persona": "cut", "persona_version": personas["cut"]["version"], "work": "pointed-awl",
+              "title": "테스트 칼럼", "date": "2026-10-19", "summary": "요약 한 줄.", "framing": "편집부 칼럼", "body": ["첫 단락이다.", "둘째 단락이다."]}
+def emut(f):
+    p = copy.deepcopy(essay_base); f(p); return p
+essay_cases = {
+ "essay AI mark": lambda p: p["body"].append("이 글은 AI가 도왔다."),
+ "essay 인공지능 mark": lambda p: p.update(summary="인공지능 칼럼"),
+ "essay star rating": lambda p: p["body"].append("★☆☆☆☆"),
+ "essay 별점 text": lambda p: p["body"].append("별점 1점조차 아깝다."),
+ "essay score number": lambda p: p.update(summary="3/5"),
+ "essay rating field": lambda p: p.update(rating=1),
+ "essay score field": lambda p: p.update(score=1),
+ "essay framing not 편집부 칼럼": lambda p: p.update(framing="공개 자료 정리"),
+ "essay missing framing": lambda p: p.pop("framing"),
+ "essay unknown persona": lambda p: p.update(persona="nobody"),
+ "essay unknown work": lambda p: p.update(work="no-such-work"),
+ "essay empty body": lambda p: p.update(body=[]),
+ "essay promo superlative": lambda p: p["body"].append("인생작이다."),
+ "essay unexpected field": lambda p: p.update(label_text="AI"),
+}
+for name, f in essay_cases.items(): expect_refused(name, lambda f=f: bs.validate_post(emut(f), personas, works, dnc))
+bs.validate_post(essay_base, personas, works, dnc); print("baseline essay passes")
+shipped = json.loads((R / "site/content/posts.json").read_text(encoding="utf-8"))
+for p_ in shipped: bs.validate_post(p_, personas, works, dnc)
+print("shipped posts pass (%d)" % len(shipped))
 # work-level robots guard: a flagged-domain fact that is not on the bare-citation list must be refused; listed ones pass
 import copy as _c
 wc = json.loads((R / "site/content/works.json").read_text(encoding="utf-8"))
@@ -87,6 +113,8 @@ if dist.exists():
         if rel.startswith("posts/") and "보관된 글이에요" not in t and 'class="byline"' not in t: print("post without byline", rel); bad += 1
         m = re.search(r'<div class="panel human">(.*?)</div>', t, re.S)
         if m and re.search(r"/posts/|/personas/|byline", m.group(1)): print("editor content in human panel", rel); bad += 1
+        if rel.startswith("posts/") and "보관된 글이에요" not in t and rel.split("/")[1] not in {p_["slug"] for p_ in shipped}: print("unshipped post page in dist", rel); bad += 1
+        if 'class="detail post-detail essay"' in t and ("공개 자료를 정리" in t or "편집부 칼럼" not in t): print("essay page with synthesis notice / without 편집부 칼럼", rel); bad += 1
     print("built-output checks done (%d pages)" % len(txt))
 bs.validate_post(base, personas, works, dnc); print("baseline post passes")
 for p in personas.values(): bs.check_persona(p)

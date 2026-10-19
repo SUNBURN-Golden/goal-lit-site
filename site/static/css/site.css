@@ -207,3 +207,6 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .next{margin:var(--s-4) 0 0}
 .next a{display:inline-flex;align-items:center;min-height:44px;padding:var(--s-3) var(--s-4);border:1px solid var(--border);border-radius:var(--r-m);background:var(--surface);color:var(--text);font-weight:700;text-decoration:none}
 .next a:hover{color:var(--accent-strong);transform:translateY(-1px)}
+/* essay type (편집부 칼럼) + single-lead home */
+.front.solo{grid-template-columns:1fr;max-width:760px}
+.essay-body p{line-height:1.85;margin:0 0 1.2em}
