@@ -3,10 +3,10 @@
 @font-face{font-family:"Pretendard";font-weight:400;font-style:normal;font-display:swap;src:url(/assets/fonts/Pretendard-Regular.subset.woff2) format("woff2")}
 @font-face{font-family:"Pretendard";font-weight:700;font-style:normal;font-display:swap;src:url(/assets/fonts/Pretendard-Bold.subset.woff2) format("woff2")}
 :root{
- --bg:#FAF9F7;--surface:#FFFFFF;--surface-2:#F2F1EE;
+ --bg:#FAF9F5;--surface:#FFFFFF;--surface-2:#F2F1EE;
  --text:#1A1A1A;--text-muted:#5E5D59;--border:#E4E2DD;--rule:#1A1A1A;
  /* --accent is decoration only (read progress, rubric bars): never a text color, never the sole carrier of meaning */
- --accent:#A78BFA;--accent-d:#5B3FB5;--accent-contrast:#FFFFFF;
+ --accent:#C96442;--accent-d:#B85635;--accent-contrast:#FFFFFF;
  --danger:#1A1A1A;--success:#1A1A1A;--warn:#1A1A1A;
  --tint-green-bg:#F2F1EE;--tint-green-fg:#1A1A1A;
  --tint-blue-bg:#F2F1EE;--tint-blue-fg:#1A1A1A;
@@ -15,7 +15,7 @@
  --tint-violet-bg:#F2F1EE;--tint-violet-fg:#1A1A1A;
  --tint-red-bg:#F2F1EE;--tint-red-fg:#1A1A1A;
  --glyph-tile:#2A2A2A;
- --header-bg:#FAF9F7;
+ --header-bg:#FAF9F5;
  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;
  --fs-1:13px;--fs-2:14px;--fs-3:16px;--fs-4:18px;--fs-5:22px;--fs-6:26px;--fs-7:32px;--fs-8:40px;
  --lh-body:1.65;--lh-prose:1.9;--lh-title:1.35;--ls-title:-.01em;
@@ -29,7 +29,7 @@
  :root{
   --bg:#141414;--surface:#1C1C1C;--surface-2:#242424;
   --text:#EDEDEA;--text-muted:#A6A5A0;--border:#2F2F2D;--rule:#EDEDEA;
-  --accent:#8B6FE0;--accent-d:#C4B5FD;--accent-contrast:#141414;
+  --accent:#D97757;--accent-d:#E08A6D;--accent-contrast:#141414;
   --danger:#EDEDEA;--success:#EDEDEA;--warn:#EDEDEA;
   --tint-green-bg:#242424;--tint-green-fg:#EDEDEA;
   --tint-blue-bg:#242424;--tint-blue-fg:#EDEDEA;

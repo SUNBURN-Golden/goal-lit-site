@@ -52,7 +52,7 @@ persona_cases = {
  "invented residence/family": lambda p: p.update(lens=p["lens"] + " 서울 거주, 결혼 3년차"),
  "photo field": lambda p: p.update(photo="https://example.com/a.jpg"),
  "bio field": lambda p: p.update(bio="대학 졸업 후 평론 활동"),
- "avatar not an abstract glyph": lambda p: p.update(glyph={"shape": "photo", "color": "#A78BFA", "url": "x.jpg"}),
+ "avatar not an abstract glyph": lambda p: p.update(glyph={"shape": "photo", "color": "#C96442", "url": "x.jpg"}),
  "no disclosed blind spot": lambda p: p.update(blind_spot=""),
 }
 bad = 0
