@@ -14,7 +14,7 @@ Design (준태님): writers appear as plain pen-name 에디터 bylines. No per-p
 The build REFUSES to publish if a post lacks its public-synthesis framing + dated source list, makes an "I read/watched it" claim,
 carries a star/score, has a long quote, copies a known source sentence, cites an unknown source, if a pen name gets an invented
 human biography/photo/age/job, if editor opinion leaks into human-rating views,
-or if a work has no tier 1-3 fact. Every page is noindex; robots Disallow. Stdlib only.
+or if a work has no tier 1-3 fact. Public pages carry robots index,follow; robots.txt allows all and lists the sitemap; the build fails if noindex is left on a public page. Stdlib only.
 Nothing is deployed, sent or requested over the network.
 """
 import argparse, csv, datetime as dt, html, json, re, shutil, sys
@@ -161,7 +161,7 @@ def validate_essay(p, personas, works):
     """type=essay: an editorial column written by the editors themselves (not a public-reaction synthesis), so the
     synthesis rules (framing wording, source list, cited opinions, 12-char quote limit, limits section) do not apply.
     Still enforced: known pen name + work, no rating/score fields or star/score text, no AI marks, no promo superlatives,
-    framing label '편집부 칼럼'; built pages still need noindex and pass the personal-info leak check."""
+    framing label '편집부 칼럼'; built pages are indexable (index,follow) and still pass the personal-info leak check."""
     pid = p.get("slug", "?")
     pe = personas.get(p.get("persona")) or fail(f"essay {pid}: unknown persona")
     if p.get("work") not in {w["slug"] for w in works}: fail(f"essay {pid}: unknown work")
