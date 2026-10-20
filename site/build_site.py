@@ -498,9 +498,7 @@ def build(site, dims, personas, works, posts, human, today):
             body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>에디터 글은 <strong>주장이 분명한 평론이에요.</strong> 작품과 담론을 겨냥하고, 인용은 짧게 출처를 밝혀요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
         site.add(f"/{slug}/", title, desc, body, act)
     site.add("/404.html", "페이지를 찾을 수 없어요", "페이지를 찾을 수 없어요.", '<div class="page"><h1>페이지를 찾을 수 없어요</h1><p><a href="/">홈으로</a></p></div>')
-    # retired posts (robots.txt audit 2026-10-17): kept out of nav/pages; the old URL shows a plain archived notice (also overwrites stale edge copies)
-    for old in ("vegetarian-translation-debate", "gray-human-reviews"):
-        site.add(f"/posts/{old}/", "보관된 글이에요", "보관 처리한 글이에요. 더 이상 공개하지 않아요.", '<div class="page"><h1>보관된 글이에요</h1><p>출처 점검 결과에 따라 이 글을 공개에서 내렸어요. <a href="/sources/">출처 원칙</a> · <a href="/">홈으로</a></p></div>')
+    # retired posts (robots.txt audit 2026-10-17: vegetarian-translation-debate, gray-human-reviews) are not generated, so their old URLs 404 and stay unindexable.
 
 def check_principles(t):
     """Principles page guard (AI-assistance note requirement removed)."""
