@@ -14,7 +14,7 @@ Design (준태님): writers appear as plain pen-name 에디터 bylines. No per-p
 The build REFUSES to publish if a post lacks its public-synthesis framing + dated source list, makes an "I read/watched it" claim,
 carries a star/score, has a long quote, copies a known source sentence, cites an unknown source, if a pen name gets an invented
 human biography/photo/age/job, if editor opinion leaks into human-rating views,
-or if a work has no tier 1-3 fact. Every page is noindex; robots Disallow. Stdlib only (+fonttools for font subset).
+or if a work has no tier 1-3 fact. Every page is noindex; robots Disallow. Stdlib only.
 Nothing is deployed, sent or requested over the network.
 """
 import argparse, csv, datetime as dt, html, json, re, shutil, sys
@@ -132,14 +132,14 @@ def load_works():
     return works
 
 def post_text(p):
-    parts = [p["title"], p["summary"], p["verdict"], *p["limits"]]
+    parts = [p["title"], p.get("subtitle") or "", p["summary"], p["verdict"], *p["limits"]]
     for s in p["sections"]: parts += [s["h"], *s["p"]]
     for o in p["opinions"]: parts += [o["topic"], o["gist"]]
     if p.get("metrics"): parts.append(p["metrics"]["text"])
     return "\n".join(parts)
 
 AI_MARK = re.compile(r"(?<![A-Za-z])AI(?![A-Za-z])|인공지능|생성형")
-ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "date", "summary", "framing", "body", "figures"}
+ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "subtitle", "date", "summary", "framing", "body", "figures"}
 # essays may use the word 별점 as rhetoric (준태님 원고), so the essay text check drops it; stars/score numbers stay refused,
 # and rating/score fields + score UI stay forbidden for every post type
 ESSAY_SCORE = re.compile(r"(★|☆|평점\s*\d|\d(\.\d)?\s*/\s*(5|10)\b|\d(\.\d)?\s*점을 (주|매)|만점)")
@@ -170,7 +170,7 @@ def validate_essay(p, personas, works):
     if p.get("persona_version") != pe["version"]: fail(f"essay {pid}: persona_version mismatch")
     if not p.get("title") or not p.get("summary") or not p.get("body") or not all(isinstance(x, str) and x.strip() for x in p["body"]): fail(f"essay {pid}: needs title, summary and body paragraphs")
     ymd(p["date"])
-    txt = "\n".join([p["title"], p["summary"], p["framing"], *p["body"]])
+    txt = "\n".join([p["title"], p.get("subtitle") or "", p["summary"], p["framing"], *p["body"]])
     for rx, why in ((ESSAY_SCORE, "score/star rating"), (AI_MARK, "AI mark"), (PROMO, "promotional superlative")):
         m = rx.search(txt)
         if m: fail(f"essay {pid}: {why}: …{txt[max(0, m.start()-15):m.end()+15]}…")
@@ -284,7 +284,6 @@ class Site:
                 f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="noindex,nofollow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
                 f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F5"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-                f'<link rel="preload" href="/assets/fonts/Pretendard-Regular.subset.woff2" as="font" type="font/woff2" crossorigin>'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active):
         cur = lambda k: ' aria-current="page"' if active == k else ""
@@ -327,16 +326,17 @@ def first_fig(p):
 def lead_story(p, personas, works_by):
     pe = personas[p["persona"]]; g = first_fig(p)
     media = (f'<a class="lead-img" href="/posts/{p["slug"]}/"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a>' if g else "")
-    return (f'<section class="front lead-story"><span class="kicker">최근 평론</span><div class="lead-grid">{media}<div class="lead-text">'
-            f'<h2><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="card-summary">{E(p["summary"])}</p>'
+    subtitle = f'<p class="lead-subtitle">{E(p["subtitle"])}</p>' if p.get("subtitle") else ""
+    return (f'<section class="front lead-story"><div class="lead-grid"><div class="lead-text"><span class="kicker">오늘의 평론</span>'
+            f'<h1><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h1>{subtitle}<p class="card-summary">{E(p["summary"])}</p>'
             f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
-            f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div></div></section>')
+            f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 →</a></div></div>{media}</div></section>')
 
-def story_row(p, personas, works_by):
+def story_row(p, personas, works_by, number):
     pe = personas[p["persona"]]; g = first_fig(p)
     thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
-    return (f'<article class="srow">{thumb}<div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div></article>')
+    return (f'<article class="srow"><span class="srow-num">{number:02d}</span><div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</article>')
 
 def story_card(p, personas, works_by):
     pe = personas[p["persona"]]; w = works_by[p["work"]]; g = first_fig(p)
@@ -351,15 +351,14 @@ def build(site, dims, personas, works, posts, human, today):
     for p in posts: pbw.setdefault(p["work"], []).append(p)
     ordered = sorted(posts, key=lambda p: p["date"], reverse=True)
     slug_idx = {p["slug"]: i for i, p in enumerate(ordered)}
-    lead, side, rest = ordered[0], ordered[1:4], ordered[4:10]
-    # ---- home: magazine front page, criticism first
+    lead, following = ordered[0], ordered[1:10]
+    # ---- home: featured critique, then the remaining reviews
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
+    story_list = (f'<section class="story-list"><div class="story-list-head"><div><span class="kicker">이어서 읽기</span><h2>지난 평론</h2></div>'
+                  f'<a href="/reviews/">전체 보기</a></div><div class="rows">{"".join(story_row(p, personas, works_by, i) for i, p in enumerate(following, 2))}</div></section>') if following else ""
     site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진(프리뷰).",
-        f'''<section class="masthead"><h1>작품은 이렇게 읽혔어요 — 한국 문학·웹툰·웹소설 평론</h1>
-<p class="sub">작품을 끝까지 따져 묻는 평론</p></section>
-{lead_story(lead, personas, works_by)}
-{f'<section class="story-list"><span class="kicker">이어서 읽기</span><div class="rows">{"".join(story_row(p, personas, works_by) for p in side)}</div></section>' if side else ""}
-{f'<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="rows">{"".join(story_row(p, personas, works_by) for p in rest)}</div></section>' if rest else ""}
+        f'''{lead_story(lead, personas, works_by)}
+{story_list}
 <section class="sec"><div class="sec-h"><h2>찾기</h2><a href="/works/">작품 전체 {len(works)}편</a></div><div class="chip-row">{genre_nav}</div></section>''', "home")
     # ---- reviews index
     site.add("/reviews/", "평론", "Goal Lit 편집부 평론 모음.",
@@ -494,21 +493,6 @@ def build(site, dims, personas, works, posts, human, today):
     for old in ("vegetarian-translation-debate", "gray-human-reviews"):
         site.add(f"/posts/{old}/", "보관된 글이에요", "보관 처리한 글이에요. 더 이상 공개하지 않아요.", '<div class="page"><h1>보관된 글이에요</h1><p>출처 점검 결과에 따라 이 글을 공개에서 내렸어요. <a href="/sources/">출처 원칙</a> · <a href="/">홈으로</a></p></div>')
 
-def subset_fonts(dist):
-    try:
-        from fontTools import subset
-        from fontTools.ttLib import TTFont
-    except ImportError:
-        print("WARN: fonttools not installed; using system Korean fonts. Use /workspace/fitness-hub/site/.venv/bin/python."); return
-    text = "".join(p.read_text(encoding="utf-8") for p in dist.rglob("*.html")) + "".join(p.read_text(encoding="utf-8") for p in (dist / "assets/js").glob("*.js"))
-    chars = "".join(sorted(set(text + "".join(chr(c) for c in range(0x20, 0x7F)) + "₩–—·→›×℃™…“”‘’〈〉")))
-    out = dist / "assets/fonts"; out.mkdir(parents=True, exist_ok=True)
-    for w in ("Regular", "Bold"):
-        o = subset.Options(); o.flavor = "woff2"; o.layout_features = ["*"]; o.name_IDs = ["*"]; o.notdef_outline = True
-        f = TTFont(ROOT / f"static/fonts/Pretendard-{w}.otf"); s = subset.Subsetter(o); s.populate(text=chars); s.subset(f)
-        f.flavor = "woff2"; f.save(out / f"Pretendard-{w}.subset.woff2")
-    shutil.copy(ROOT / "static/fonts/Pretendard-OFL-LICENSE.txt", out / "Pretendard-OFL-LICENSE.txt")
-
 def check_principles(t):
     """Principles page guard (AI-assistance note requirement removed)."""
     return []
@@ -565,7 +549,6 @@ def main():
     (dist / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
     (dist / "_headers").write_text("/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
         "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n/assets/*\n  Cache-Control: public, max-age=86400\n")
-    subset_fonts(dist)
     bad = leak_check(dist)
     n = sum(1 for p in dist.rglob("*") if p.is_file())
     print(f"built {len(site.pages)} pages ({len(works)} works, {len(personas)} personas, {len(posts)} editor posts) -> {dist} ({n} files, {sum(p.stat().st_size for p in dist.rglob('*') if p.is_file())/1024:.0f} KB)")
