@@ -283,7 +283,7 @@ class Site:
         return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
                 f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="noindex,nofollow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
-                f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F5F5F7"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+                f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F7"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
                 f'<link rel="preload" href="/assets/fonts/Pretendard-Regular.subset.woff2" as="font" type="font/woff2" crossorigin>'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active):
@@ -309,18 +309,41 @@ def work_card(w, posts_by_work):
             f'<h3><a href="/works/{w["slug"]}/">{E(w["title"])}</a></h3><div class="loc">{E(who) if who else "작가 미확인"} · {E(pub_label(w))}</div>'
             f'<div class="meta">평론 {n}편 · 확인일 {dot(w["verified"])}</div></article>')
 
-def post_card(p, personas, works_by, big=False):
+def post_card(p, personas, works_by):
     pe = personas[p["persona"]]; w = works_by[p["work"]]
+    when = f'<time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time>'
     if p.get("type") == "essay":
-        summary = f'<p class="card-summary">{E(p["summary"])}</p>' if big else ""
-        return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span><span class="badge">{E(p["framing"])}</span></div>'
-                f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>{summary}<div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div></article>')
+        return (f'<article class="card"><div class="chips"><span class="badge">{E(w["title"])}</span><span class="badge">{E(p["framing"])}</span></div>'
+                f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><div class="meta">{byline(pe)} · {when}</div></article>')
     st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판")}
-    summary = f'<p class="card-summary">{E(p["summary"])}</p>' if big else ""
-    stats = (f'<div class="meta compact-meta">{dot(ymd(p["date"]))} · 출처 {len(p["sources"])} · 자료 {E(p["read_level"])}</div>' if big
-             else f'<p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p><div class="meta">{byline(pe)} · {dot(ymd(p["date"]))}</div>')
-    return (f'<article class="card{" lead-card" if big else ""}"><div class="chips"><span class="badge">{E(w["title"])}</span></div>'
-            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>{summary}{stats}</article>')
+    return (f'<article class="card"><div class="chips"><span class="badge">{E(w["title"])}</span></div>'
+            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p><div class="meta">{byline(pe)} · {when}</div></article>')
+
+def first_fig(p):
+    for g in (p.get("figures") or []):
+        if (ESSAY_IMG_DIR / g["file"]).exists(): return g
+    return None
+
+def lead_story(p, personas, works_by):
+    pe = personas[p["persona"]]; g = first_fig(p)
+    media = (f'<a class="lead-img" href="/posts/{p["slug"]}/"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a>' if g else "")
+    return (f'<section class="front lead-story"><span class="kicker">최근 평론</span><div class="lead-grid">{media}<div class="lead-text">'
+            f'<h2><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="card-summary">{E(p["summary"])}</p>'
+            f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
+            f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div></div></section>')
+
+def story_row(p, personas, works_by):
+    pe = personas[p["persona"]]; g = first_fig(p)
+    thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
+    return (f'<article class="srow">{thumb}<div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div></article>')
+
+def story_card(p, personas, works_by):
+    pe = personas[p["persona"]]; w = works_by[p["work"]]; g = first_fig(p)
+    thumb = (f'<a class="sthumb" href="/posts/{p["slug"]}/" aria-hidden="true" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></a>' if g else "")
+    return (f'<article class="scard">{thumb}<div class="chips"><span class="badge">{E(w["title"])}</span></div>'
+            f'<h2><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="ssum">{E(p["summary"])}</p>'
+            f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
 
 def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
@@ -332,15 +355,15 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- home: magazine front page, criticism first
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
     site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진(프리뷰).",
-        f'''<section class="masthead"><h1>작품은 이렇게 읽혔다 — 한국 문학·웹툰·웹소설 평론</h1>
+        f'''<section class="masthead"><h1>작품은 이렇게 읽혔어요 — 한국 문학·웹툰·웹소설 평론</h1>
 <p class="sub">작품을 끝까지 따져 묻는 평론</p></section>
-<section class="front{"" if side else " solo"}"><div class="front-lead"><span class="kicker">최근 평론</span>{post_card(lead, personas, works_by, True)}<div class="cta-row"><a class="cta cta-main" href="/posts/{lead["slug"]}/">평론 읽기 →</a><a class="cta cta-sub" href="/works/">작품·장르로 찾기</a></div></div>
-{f'<div class="front-side"><span class="kicker">이어서 읽기</span>{"".join(post_card(p, personas, works_by) for p in side)}</div>' if side else ""}</section>
-{f'<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="grid">{"".join(post_card(p, personas, works_by) for p in rest)}</div></section>' if rest else ""}
+{lead_story(lead, personas, works_by)}
+{f'<section class="story-list"><span class="kicker">이어서 읽기</span><div class="rows">{"".join(story_row(p, personas, works_by) for p in side)}</div></section>' if side else ""}
+{f'<section class="sec"><div class="sec-h"><h2>평론 더 보기</h2><a href="/reviews/">전체 평론</a></div><div class="rows">{"".join(story_row(p, personas, works_by) for p in rest)}</div></section>' if rest else ""}
 <section class="sec"><div class="sec-h"><h2>찾기</h2><a href="/works/">작품 전체 {len(works)}편</a></div><div class="chip-row">{genre_nav}</div></section>''', "home")
     # ---- reviews index
     site.add("/reviews/", "평론", "Goal Lit 편집부 평론 모음.",
-        f'<div class="page wide"><h1>평론</h1><p class="lead">편집부 평론 {len(posts)}편이에요. 점수는 없어요.</p></div><div class="grid">' + "".join(post_card(p, personas, works_by) for p in ordered) + '</div>', "reviews")
+        f'<div class="page wide"><h1>평론</h1><p class="lead">편집부 평론 {len(posts)}편이에요. 점수는 없어요.</p></div><div class="scard-grid">' + "".join(story_card(p, personas, works_by) for p in ordered) + '</div>', "reviews")
     # ---- works
     groups = "".join(f'<section class="sec"><div class="sec-h"><h2>{E(m)}</h2></div><div class="grid">' + "".join(work_card(w, pbw) for w in works if w["medium"] == m) + '</div></section>' for m in MEDIUM_ORDER if any(w["medium"] == m for w in works))
     site.add("/works/", "작품", "소설·시·에세이·웹툰·웹소설을 작품별로 모았어요.",
@@ -420,9 +443,9 @@ def build(site, dims, personas, works, posts, human, today):
                     figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
                 else: print(f"WARN: essay {x['slug']}: figure {g['file']} missing in static/img/essays — skipped")
             paras = "".join(f"<p>{E(t)}</p>" + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
-            body = f'''<div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
+            body = f'''<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
-<p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p>
+<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p>
 <p class="framing">{E(x["framing"])}</p>
 <div class="essay-body">{paras}</div>
 <div class="verify"><p>사실관계가 다른 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주세요. 확인하고 고칠게요. 이 글에는 광고나 제휴 링크가 없어요.</p></div>{nxt}</div>'''
@@ -449,7 +472,7 @@ def build(site, dims, personas, works, posts, human, today):
         srcl = "".join(f'<li>{E(s["outlet"])} · <a href="{E(s["url"])}" rel="noopener noreferrer">{E(s["title"])}</a> <span class="muted">({E(s["kind"])}{", " + s["date"] if s["date"] else ", 게재일 미확인"}{"; " + E(s["note"]) if s.get("note") else ""})</span></li>' for s in x["sources"])
         body = f'''<div class="detail post-detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>{glance}
-<p class="post-byline">{byline(pe)} · 작성 {dot(ymd(x["date"]))}</p><details class="meta-more"><summary>정리 관점·검수 상태</summary><span><a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></details>
+<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p><details class="meta-more"><summary>정리 관점·검수 상태</summary><span><a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></details>
 <p class="framing">{E(x["framing"])}</p>
 {secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않아요.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여 드려요.</p></div></div>
 {lim}<h2>참고한 공개 자료</h2><ul class="clean">{srcl}</ul>
