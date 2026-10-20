@@ -342,7 +342,7 @@ def story_card(p, personas, works_by):
     pe = personas[p["persona"]]; w = works_by[p["work"]]; g = first_fig(p)
     thumb = (f'<a class="sthumb" href="/posts/{p["slug"]}/" aria-hidden="true" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></a>' if g else "")
     return (f'<article class="scard">{thumb}<div class="chips"><span class="badge">{E(w["title"])}</span></div>'
-            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><p class="ssum">{E(p["summary"])}</p>'
+            f'<h2><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="ssum">{E(p["summary"])}</p>'
             f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
 
 def build(site, dims, personas, works, posts, human, today):
@@ -355,7 +355,7 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- home: magazine front page, criticism first
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
     site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진(프리뷰).",
-        f'''<section class="masthead"><h1>작품은 이렇게 읽혔다 — 한국 문학·웹툰·웹소설 평론</h1>
+        f'''<section class="masthead"><h1>작품은 이렇게 읽혔어요 — 한국 문학·웹툰·웹소설 평론</h1>
 <p class="sub">작품을 끝까지 따져 묻는 평론</p></section>
 {lead_story(lead, personas, works_by)}
 {f'<section class="story-list"><span class="kicker">이어서 읽기</span><div class="rows">{"".join(story_row(p, personas, works_by) for p in side)}</div></section>' if side else ""}
