@@ -25,8 +25,9 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT.parent / "data"
 DIST = ROOT / "dist"
-BRAND, BRAND_NOTE = "Goal Lit", "비공개 프리뷰"
+BRAND, BRAND_NOTE = "Goal Lit", "평론 웹진"
 TAGLINE = "한국 문학·웹툰·웹소설 평론 웹진"
+SITE_URL = "https://goal-lit.soulbound.co.kr"
 GENRES = {"순문학": "literary", "단편·소설집": "short", "시·에세이": "poetry-essay", "SF": "sf", "판타지": "fantasy", "미스터리·스릴러": "mystery",
           "로맨스": "romance", "호러": "horror", "무협": "wuxia", "웹툰": "webtoon", "웹소설": "webnovel"}
 GENRE_NOTE = {"순문학": "장편·중단편 소설과 문학상 수상작", "단편·소설집": "소설집·초단편집", "시·에세이": "시집과 에세이", "SF": "과학소설", "판타지": "판타지·환상 문학",
@@ -144,6 +145,8 @@ ESSAY_KEYS = {"slug", "type", "persona", "persona_version", "work", "title", "su
 # and rating/score fields + score UI stay forbidden for every post type
 ESSAY_SCORE = re.compile(r"(★|☆|평점\s*\d|\d(\.\d)?\s*/\s*(5|10)\b|\d(\.\d)?\s*점을 (주|매)|만점)")
 ESSAY_IMG_DIR = ROOT / "static/img/essays"
+# essay block quotes ('> ' paragraphs) are exempt from quote-length / source-overlap checks: those checks only run on
+# public-synthesis posts (validate_post), never on essays. A block quote must not be empty and the body must not be quotes only.
 FIG_STYLE = re.compile(r"^(에곤 실레풍|클림트풍) 삽화: \S")
 def check_figures(p):
     pid = p.get("slug", "?"); figs = p.get("figures", [])
@@ -176,6 +179,9 @@ def validate_essay(p, personas, works):
         if m: fail(f"essay {pid}: {why}: …{txt[max(0, m.start()-15):m.end()+15]}…")
     if BIO.search(p["framing"]): fail(f"essay {pid}: biographical detail in framing")
     check_figures(p)
+    qs = [b for b in p["body"] if b.startswith(">")]
+    if any(not b.lstrip("> ").strip() for b in qs): fail(f"essay {pid}: empty block quote")
+    if len(qs) == len(p["body"]): fail(f"essay {pid}: body must not be block quotes only")
 
 def validate_post(p, personas, works, dnc):
     if p.get("type") == "essay": return validate_essay(p, personas, works)
@@ -281,13 +287,13 @@ class Site:
     def head(self, title, desc):
         full = title if title.startswith(BRAND) else f"{title} · {BRAND}"
         return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-                f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="noindex,nofollow">\n'
+                f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="index,follow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
                 f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F5"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active):
         cur = lambda k: ' aria-current="page"' if active == k else ""
-        return ('<a class="skip" href="#main">본문으로 건너뛰기</a><div class="preview-bar">비공개 프리뷰 · 검색 노출 없음(noindex)</div>'
+        return ('<a class="skip" href="#main">본문으로 건너뛰기</a>'
                 f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a></div>'
                 f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a></nav></div></header>')
     def foot(self):
@@ -349,14 +355,15 @@ def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
     pbw = {}
     for p in posts: pbw.setdefault(p["work"], []).append(p)
-    ordered = sorted(posts, key=lambda p: p["date"], reverse=True)
+    # newest first; same date -> the one added later to posts.json comes first
+    ordered = [p for _, p in sorted(enumerate(posts), key=lambda ip: (ip[1]["date"], ip[0]), reverse=True)]
     slug_idx = {p["slug"]: i for i, p in enumerate(ordered)}
     lead, following = ordered[0], ordered[1:10]
     # ---- home: featured critique, then the remaining reviews
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
     story_list = (f'<section class="story-list"><div class="story-list-head"><div><span class="kicker">이어서 읽기</span><h2>지난 평론</h2></div>'
                   f'<a href="/reviews/">전체 보기</a></div><div class="rows">{"".join(story_row(p, personas, works_by, i) for i, p in enumerate(following, 2))}</div></section>') if following else ""
-    site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진(프리뷰).",
+    site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진.",
         f'''{lead_story(lead, personas, works_by)}
 {story_list}
 <section class="sec"><div class="sec-h"><h2>찾기</h2><a href="/works/">작품 전체 {len(works)}편</a></div><div class="chip-row">{genre_nav}</div></section>''', "home")
@@ -413,7 +420,7 @@ def build(site, dims, personas, works, posts, human, today):
                 f'<div class="loc">{E(p["domain"])}</div><div class="meta">정리 관점 v{p["version"]} · 초안</div></article>')
     eds = [p for p in personas.values() if p["kind"] == "section"]; rds = [p for p in personas.values() if p["kind"] == "angle"]
     site.add("/personas/", "에디터", "이 사이트의 필명 에디터 9명 소개.",
-        f'<div class="page"><h1>에디터</h1><p class="lead">이 사이트의 글은 필명 에디터가 써요. 공개된 기사·리뷰·후기를 출처와 함께 종합해 정리하고, 각자 &lsquo;무엇을 먼저 정리하는지&rsquo;와 <strong>약점</strong>을 공개해요. 필명이라 이력·사진 같은 개인 정보는 없어요.</p></div>'
+        f'<div class="page"><h1>에디터</h1><p class="lead">이 사이트의 평론은 필명 에디터가 써요. 작품과 담론을 겨냥한 평론을 싣고, 실존 인물을 비하하지 않아요. 에디터마다 &lsquo;무엇을 먼저 보는지&rsquo;와 <strong>약점</strong>을 공개해요. 필명이라 이력·사진 같은 개인 정보는 없어요.</p></div>'
         f'<section class="sec"><div class="sec-h"><h2>분야 담당 에디터 3</h2></div><div class="grid">{"".join(pcard(p) for p in eds)}</div></section>'
         f'<section class="sec"><div class="sec-h"><h2>관점 담당 에디터 6</h2></div><div class="grid">{"".join(pcard(p) for p in rds)}</div></section>', "personas")
     for p in personas.values():
@@ -441,7 +448,9 @@ def build(site, dims, personas, works, posts, human, today):
                 if (ESSAY_IMG_DIR / g["file"]).exists():
                     figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
                 else: print(f"WARN: essay {x['slug']}: figure {g['file']} missing in static/img/essays — skipped")
-            paras = "".join(f"<p>{E(t)}</p>" + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
+            # a body paragraph that starts with '> ' is a block quote (essay only; quoted for criticism, 준태님 원고 그대로)
+            def para(t): return f'<blockquote class="essay-quote"><p>{E(t[2:] if t.startswith("> ") else t[1:])}</p></blockquote>' if t.startswith(">") else f"<p>{E(t)}</p>"
+            paras = "".join(para(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
             body = f'''<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
 <p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p>
@@ -479,14 +488,14 @@ def build(site, dims, personas, works, posts, human, today):
         site.add(f'/posts/{x["slug"]}/', x["title"], x["summary"], body, "reviews")
     # ---- new books / completions stub
     site.add("/new-books/", "이번 주 신간·완결", "이번 주 신간·완결 코너는 준비 중이에요.",
-        '''<div class="page"><h1>이번 주 신간·완결</h1><p class="muted">준비 중 · 비공개 프리뷰</p><p class="lead">신간 도서와 웹툰·웹소설 완결 소식은 아직 열지 않았어요. 지어낸 목록으로 채우지 않아요.</p>
+        '''<div class="page"><h1>이번 주 신간·완결</h1><p class="muted">준비 중</p><p class="lead">신간 도서와 웹툰·웹소설 완결 소식은 아직 열지 않았어요. 지어낸 목록으로 채우지 않아요.</p>
 <div class="todo"><ul class="clean"><li>자료 출처 후보: 국립중앙도서관 ISBN 서지 API(인증키 신청 필요), 출판사·플랫폼의 공식 신간·완결 공지(수동 확인)예요.</li><li>열리면 항목마다 출처·확인일을 붙이고, 평론은 서평·보도에 인용된 반응이 있을 때만 붙여요.</li></ul></div></div>''', "books")
     for slug, title, desc, act in [("principles", "편집 원칙", "필명 에디터 글의 작성 원칙(초안).", "principles"), ("sources", "출처 등급", "출처 등급 설명.", "about"),
                                    ("ads", "광고·제휴 표기", "광고·제휴 표시 원칙(초안).", "about"), ("privacy", "개인정보 처리 안내", "추적 도구 없이 운영(초안).", "about"),
                                    ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about")]:
         body = f'<div class="page">{(ROOT / f"content/pages/{slug}.html").read_text(encoding="utf-8")}</div>'
         if slug == "principles":
-            body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>에디터 글은 <strong>작품을 직접 읽거나 보고 쓴 후기가 아니에요.</strong> 공개된 평론·서평·기사를 출처와 함께 종합해요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
+            body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>에디터 글은 <strong>주장이 분명한 평론이에요.</strong> 작품과 담론을 겨냥하고, 인용은 짧게 출처를 밝혀요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
         site.add(f"/{slug}/", title, desc, body, act)
     site.add("/404.html", "페이지를 찾을 수 없어요", "페이지를 찾을 수 없어요.", '<div class="page"><h1>페이지를 찾을 수 없어요</h1><p><a href="/">홈으로</a></p></div>')
     # retired posts (robots.txt audit 2026-10-17): kept out of nav/pages; the old URL shows a plain archived notice (also overwrites stale edge copies)
@@ -506,7 +515,7 @@ def leak_check(dist):
         for pat in LEAK:
             m = re.search(pat, t)
             if m: bad.append((rel, pat, t[max(0, m.start() - 20):m.end() + 20]))
-        if 'content="noindex,nofollow"' not in t: bad.append((rel, "missing noindex", ""))
+        if "noindex" in t: bad.append((rel, "noindex left on a public page", ""))
         if "각색 트래커" in t: bad.append((rel, "stale 각색 트래커 wording (direction reset: works + 평론 first)", ""))
         if re.search(r'style="', t): bad.append((rel, "inline style attribute (blocked by CSP style-src self)", ""))
         if rel == "index.html":
@@ -546,8 +555,10 @@ def main():
     if (ROOT / "static/js").exists(): shutil.copytree(ROOT / "static/js", dist / "assets/js")
     if (ROOT / "static/img").exists(): shutil.copytree(ROOT / "static/img", dist / "assets/img")
     shutil.copy(ROOT / "static/favicon.svg", dist / "favicon.svg")
-    (dist / "robots.txt").write_text("User-agent: *\nDisallow: /\n")
-    (dist / "_headers").write_text("/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
+    (dist / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n")
+    urls = sorted(("/" + p.relative_to(dist).as_posix()).removesuffix("index.html") for p in dist.rglob("*.html") if p.name != "404.html" and "보관된 글이에요" not in p.read_text(encoding="utf-8"))
+    (dist / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"<url><loc>{SITE_URL}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
+    (dist / "_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
         "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n/assets/*\n  Cache-Control: public, max-age=86400\n")
     bad = leak_check(dist)
     n = sum(1 for p in dist.rglob("*") if p.is_file())
@@ -555,7 +566,7 @@ def main():
     if bad:
         for b in bad: print("CHECK FAIL:", b)
         sys.exit(2)
-    print("checks OK (framing + sources, pen-name guards, no experience claims, no scores, quote/copy limits, leak check, every page noindex)")
+    print("checks OK (framing + sources, pen-name guards, no experience claims, no scores, quote/copy limits, leak check, public: index,follow + sitemap)")
 
 if __name__ == "__main__":
     main()
