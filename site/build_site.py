@@ -295,10 +295,10 @@ class Site:
         cur = lambda k: ' aria-current="page"' if active == k else ""
         return ('<a class="skip" href="#main">본문으로 건너뛰기</a>'
                 f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a></div>'
-                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a></nav></div></header>')
+                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></nav></div></header>')
     def foot(self):
         return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">({BRAND_NOTE})</span>'
-                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a></div>'
+                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></div>'
                 '<p>작품 정보마다 출처와 확인일을 붙여요. 평론은 편집부 칼럼이고, 점수는 매기지 않아요.</p><p>© 2026</p></div></footer>')
     def add(self, path, title, desc, body, active=""):
         self.pages[path] = self.head(title, desc) + f'<body>{self.nav(active)}<main id="main" class="wrap">{body}</main>{self.foot()}</body></html>'
