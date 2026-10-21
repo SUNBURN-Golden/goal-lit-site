@@ -417,7 +417,7 @@ def build(site, dims, personas, works, posts, human, today):
     # ---- personas
     def pcard(p):
         return (f'<article class="card"><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline(p)}<h3 class="tight"><a href="/personas/{p["id"]}/">{E(p["name"])} — {E(p["tagline"])}</a></h3></div></div>'
-                f'<div class="loc">{E(p["domain"])}</div><div class="meta">정리 관점 v{p["version"]} · 초안</div></article>')
+                f'<div class="loc">{E(p["domain"])}</div><div class="meta">먼저 보는 것 v{p["version"]} · 초안</div></article>')
     eds = [p for p in personas.values() if p["kind"] == "section"]; rds = [p for p in personas.values() if p["kind"] == "angle"]
     site.add("/personas/", "에디터", "이 사이트의 필명 에디터 9명 소개.",
         f'<div class="page"><h1>에디터</h1><p class="lead">이 사이트의 평론은 필명 에디터가 써요. 작품과 담론을 겨냥한 평론을 싣고, 실존 인물을 비하하지 않아요. 에디터마다 &lsquo;무엇을 먼저 보는지&rsquo;와 <strong>약점</strong>을 공개해요. 필명이라 이력·사진 같은 개인 정보는 없어요.</p></div>'
@@ -430,7 +430,7 @@ def build(site, dims, personas, works, posts, human, today):
         log = "".join(f'<li>v{c["version"]} ({c["date"]}) {E(c["note"])}</li>' for c in p["changelog"])
         body = f'''<div class="detail"><p class="crumb"><a href="/personas/">에디터</a></p><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline(p)}<h1 class="tight">{E(p["name"])}</h1></div></div>
 <p class="lead">{E(p["tagline"])} · 필명이에요. 이력·사진은 공개하지 않아요.</p>
-<h2>정리 관점</h2><p>{E(p["lens"])}.</p><p class="muted">담당 영역: {E(p["domain"])}</p>
+<h2>먼저 보는 것</h2><p>{E(p["lens"])}.</p><p class="muted">담당 영역: {E(p["domain"])}</p>
 <h2>정리 비중</h2><p class="muted">공개 반응을 정리할 때 영역마다 두는 비중이에요(합계 100). 작품 점수가 아니에요.</p><div class="bars">{bars}</div>
 <div class="limits"><h3>이 에디터의 약점(공개)</h3><p>{E(p["blind_spot"])}</p></div>
 <h2>글쓰기 규칙</h2><ul class="clean">{"".join(f"<li>{E(s)}</li>" for s in p["style"])}<li>글 구성: {" → ".join(E(s) for s in p["template"])}</li><li>직접 경험 주장·별점·과장 표현은 쓰지 않아요.</li></ul>
@@ -480,7 +480,7 @@ def build(site, dims, personas, works, posts, human, today):
         srcl = "".join(f'<li>{E(s["outlet"])} · <a href="{E(s["url"])}" rel="noopener noreferrer">{E(s["title"])}</a> <span class="muted">({E(s["kind"])}{", " + s["date"] if s["date"] else ", 게재일 미확인"}{"; " + E(s["note"]) if s.get("note") else ""})</span></li>' for s in x["sources"])
         body = f'''<div class="detail post-detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>{glance}
-<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p><details class="meta-more"><summary>정리 관점·검수 상태</summary><span><a href="/personas/{pe["id"]}/">정리 관점 v{pe["version"]}</a> · 검수 전 샘플</span></details>
+<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p><details class="meta-more"><summary>에디터 소개·검수 상태</summary><span><a href="/personas/{pe["id"]}/">먼저 보는 것 v{pe["version"]}</a> · 검수 전 샘플</span></details>
 <p class="framing">{E(x["framing"])}</p>
 {secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않아요.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여 드려요.</p></div></div>
 {lim}<h2>참고한 공개 자료</h2><ul class="clean">{srcl}</ul>
