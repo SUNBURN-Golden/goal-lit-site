@@ -295,10 +295,10 @@ class Site:
         cur = lambda k: ' aria-current="page"' if active == k else ""
         return ('<a class="skip" href="#main">본문으로 건너뛰기</a>'
                 f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a></div>'
-                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></nav></div></header>')
+                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a><a href="/signup/"{cur("signup")}>회원가입</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></nav></div></header>')
     def foot(self):
         return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">({BRAND_NOTE})</span>'
-                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/privacy/">개인정보 처리 안내</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></div>'
+                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/signup/">회원가입</a><a href="/privacy/">개인정보 처리 안내</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></div>'
                 '<p>작품 정보마다 출처와 확인일을 붙여요. 평론은 편집부 칼럼이고, 점수는 매기지 않아요.</p><p>© 2026</p></div></footer>')
     def add(self, path, title, desc, body, active=""):
         self.pages[path] = self.head(title, desc) + f'<body>{self.nav(active)}<main id="main" class="wrap">{body}</main>{self.foot()}</body></html>'
@@ -492,7 +492,7 @@ def build(site, dims, personas, works, posts, human, today):
 <div class="todo"><ul class="clean"><li>자료 출처 후보: 국립중앙도서관 ISBN 서지 API(인증키 신청 필요), 출판사·플랫폼의 공식 신간·완결 공지(수동 확인)예요.</li><li>열리면 항목마다 출처·확인일을 붙이고, 평론은 서평·보도에 인용된 반응이 있을 때만 붙여요.</li></ul></div></div>''', "books")
     for slug, title, desc, act in [("principles", "편집 원칙", "필명 에디터 글의 작성 원칙(초안).", "principles"), ("sources", "출처 등급", "출처 등급 설명.", "about"),
                                    ("ads", "광고·제휴 표기", "광고·제휴 표시 원칙(초안).", "about"), ("privacy", "개인정보 처리 안내", "추적 도구 없이 운영(초안).", "about"),
-                                   ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about")]:
+                                   ("corrections", "정정·삭제 요청", "정정·삭제 요청 안내.", "about"), ("signup", "회원가입 · 뉴스레터", "Google 계정 연동 회원가입 및 주간 뉴스레터 구독.", "signup")]:
         body = f'<div class="page">{(ROOT / f"content/pages/{slug}.html").read_text(encoding="utf-8")}</div>'
         if slug == "principles":
             body += '''<section class="band"><h2>다른 점</h2><ul class="clean"><li>에디터 글은 <strong>주장이 분명한 평론이에요.</strong> 작품과 담론을 겨냥하고, 인용은 짧게 출처를 밝혀요.</li><li><strong>사람 평점과 에디터 의견은 섞지 않아요.</strong> 에디터 글에는 점수가 없어요.</li><li>호평만 있거나 비판만 있으면 그렇다고 적고, 확인하지 못한 것은 &lsquo;아직 확인하지 못한 것&rsquo;에 적어요.</li></ul></section>'''
@@ -553,11 +553,13 @@ def main():
     if (ROOT / "static/js").exists(): shutil.copytree(ROOT / "static/js", dist / "assets/js")
     if (ROOT / "static/img").exists(): shutil.copytree(ROOT / "static/img", dist / "assets/img")
     shutil.copy(ROOT / "static/favicon.svg", dist / "favicon.svg")
+    for fn in ("_worker.js", "_routes.json"):
+        if (ROOT / "static" / fn).exists(): shutil.copy(ROOT / "static" / fn, dist / fn)
     (dist / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n")
     urls = sorted(("/" + p.relative_to(dist).as_posix()).removesuffix("index.html") for p in dist.rglob("*.html") if p.name != "404.html" and "보관된 글이에요" not in p.read_text(encoding="utf-8"))
     (dist / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"<url><loc>{SITE_URL}{u}</loc></url>\n" for u in urls) + "</urlset>\n", encoding="utf-8")
     (dist / "_headers").write_text("/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: DENY\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
-        "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\n/assets/*\n  Cache-Control: public, max-age=86400\n")
+        "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'\n/assets/*\n  Cache-Control: public, max-age=86400\n")
     bad = leak_check(dist)
     n = sum(1 for p in dist.rglob("*") if p.is_file())
     print(f"built {len(site.pages)} pages ({len(works)} works, {len(personas)} personas, {len(posts)} editor posts) -> {dist} ({n} files, {sum(p.stat().st_size for p in dist.rglob('*') if p.is_file())/1024:.0f} KB)")

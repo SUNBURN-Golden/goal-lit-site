@@ -250,3 +250,11 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
  .read-progress{display:none}
  *,*:before,*:after{transition:none!important;animation:none!important}
 }
+
+/* social signup + pre-checked newsletter opt-in */
+.auth-card{margin:var(--s-6) 0;padding:var(--s-6);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-m);max-width:560px}
+.auth-form{display:flex;flex-direction:column;gap:var(--s-4)}
+.auth-check{display:flex;align-items:flex-start;gap:var(--s-3);cursor:pointer;line-height:1.6;padding:var(--s-2) 0}
+.auth-check input[type="checkbox"]{width:20px;height:20px;margin-top:4px;accent-color:var(--action);flex-shrink:0;cursor:pointer}
+.auth-btn{border:0;cursor:pointer;font-family:inherit}
+.auth-note{margin:var(--s-4) 0 0;font-size:var(--fs-2)}
