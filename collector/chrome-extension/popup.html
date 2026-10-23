@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>꼴릿 (Goal Lit) — 이 자료 담기</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; width: 340px; margin: 0; padding: 14px; background: #faf8f5; color: #1f1e1c; }
+    h1 { font-size: 15px; margin: 0 0 8px; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-top: 8px; margin-bottom: 3px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px; border: 1px solid #d5d0c8; border-radius: 4px; background: #fff; }
+    textarea { height: 64px; resize: vertical; }
+    button { margin-top: 12px; width: 100%; padding: 9px; background: #1f1e1c; color: #fff; border: 0; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .status { margin-top: 8px; font-size: 11px; color: #57534e; }
+  </style>
+</head>
+<body>
+  <h1>꼴릿 (Goal Lit) — 이 자료 담기</h1>
+  <label for="workSlug">관련 작품 슬러그</label>
+  <input id="workSlug" type="text" placeholder="예: pointed-awl, kim-jiyoung-born-1982, vegetarian" />
+
+  <label for="accessLevel">원문 접근 수준 구분</label>
+  <select id="accessLevel">
+    <option value="book_intro">작품 소개 / 공식 서지 (book_intro)</option>
+    <option value="paper_abstract">논문 초록 확인 (paper_abstract)</option>
+    <option value="full_text_read">실제 독서 기록 / 원문 강독 (full_text_read)</option>
+    <option value="press_article" selected>언론 기사 (press_article)</option>
+    <option value="author_interview">작가 인터뷰 / 수상 소감 (author_interview)</option>
+  </select>
+
+  <label for="thesis">비평 논점 / 작가 발언 메모 (선택)</label>
+  <textarea id="thesis" placeholder="핵심 논점이나 반론, 근거 위치(쪽수/문단)를 적어주세요."></textarea>
+
+  <button id="clipBtn">이 자료 담기 (개인정보 제외 후 수집함 이동)</button>
+  <div id="statusMsg" class="status">activeTab 권한으로 필요한 본문 영역만 안전하게 추출합니다.</div>
+  <script src="popup.js"></script>
+</body>
+</html>

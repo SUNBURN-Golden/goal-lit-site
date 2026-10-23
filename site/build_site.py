@@ -284,24 +284,36 @@ def pub_label(w):
 
 class Site:
     def __init__(self, today): self.today, self.pages = today, {}
-    def head(self, title, desc):
+    def head(self, title, desc, lang="ko"):
         full = title if title.startswith(BRAND) else f"{title} · {BRAND}"
-        return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        return (f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
                 f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="index,follow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
                 f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F5"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
-    def nav(self, active):
+    def nav(self, active, en_href="/en/"):
         cur = lambda k: ' aria-current="page"' if active == k else ""
         return ('<a class="skip" href="#main">본문으로 건너뛰기</a>'
                 f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/"><i></i>{BRAND}<small>{TAGLINE}</small></a></div>'
-                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a><a href="/signup/"{cur("signup")}>회원가입</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></nav></div></header>')
-    def foot(self):
+                f'<nav class="nav" aria-label="주 메뉴"><a href="/reviews/"{cur("reviews")}>평론</a><a href="/works/"{cur("works")}>작품</a><a href="/genres/"{cur("genres")}>장르</a><a href="/signup/"{cur("signup")}>회원가입</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a><a href="{E(en_href)}" lang="en" aria-label="English edition">EN</a></nav></div></header>')
+    def foot(self, en_href="/en/"):
         return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">({BRAND_NOTE})</span>'
-                '<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/signup/">회원가입</a><a href="/privacy/">개인정보 처리 안내</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a></div>'
+                f'<div class="flinks"><a href="/personas/">에디터</a><a href="/authors/">작가</a><a href="/new-books/">이번 주 신간·완결</a><a href="/principles/">편집 원칙</a><a href="/sources/">출처 등급</a><a href="/ads/">광고·제휴 표기</a><a href="/corrections/">정정·삭제 요청</a><a href="/signup/">회원가입</a><a href="/privacy/">개인정보 처리 안내</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit 인스타그램 @goallit.mag">인스타그램</a><a href="{E(en_href)}" lang="en">English (EN)</a></div>'
                 '<p>작품 정보마다 출처와 확인일을 붙여요. 평론은 편집부 칼럼이고, 점수는 매기지 않아요.</p><p>© 2026</p></div></footer>')
+    def nav_en(self, active, ko_href="/"):
+        cur = lambda k: ' aria-current="page"' if active == k else ""
+        return ('<a class="skip" href="#main">Skip to content</a>'
+                f'<header class="site-header"><div class="wrap"><div class="hrow"><a class="brand" href="/en/"><i></i>{BRAND}<small>Korean Literary, Webtoon &amp; Web Novel Criticism</small></a></div>'
+                f'<nav class="nav" aria-label="Main navigation"><a href="/en/reviews/"{cur("reviews")}>Criticism</a><a href="/en/works/"{cur("works")}>Works</a><a href="/en/genres/"{cur("genres")}>Genres</a><a href="/en/signup/"{cur("signup")}>Sign Up</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit Instagram @goallit.mag">Instagram</a><a href="{E(ko_href)}" lang="ko" aria-label="한국어판">KO</a></nav></div></header>')
+    def foot_en(self, ko_href="/"):
+        return (f'<footer class="site-footer"><div class="wrap"><strong>{BRAND}</strong> <span class="muted">(Criticism Webzine)</span>'
+                f'<div class="flinks"><a href="/en/personas/">Editors</a><a href="/en/principles/">Editorial Principles</a><a href="/en/sources/">Source Tiers</a><a href="/en/corrections/">Corrections</a><a href="/en/signup/">Sign Up</a><a href="/en/privacy/">Privacy</a><a href="https://www.instagram.com/goallit.mag/" target="_blank" rel="noopener noreferrer" aria-label="Goal Lit Instagram @goallit.mag">Instagram</a><a href="{E(ko_href)}" lang="ko">한국어 (KO)</a></div>'
+                '<p>Every work entry carries dated citations and explicit verification boundaries. Editorial columns never assign numerical or star ratings.</p><p>© 2026</p></div></footer>')
     def add(self, path, title, desc, body, active=""):
-        self.pages[path] = self.head(title, desc) + f'<body>{self.nav(active)}<main id="main" class="wrap">{body}</main>{self.foot()}</body></html>'
+        en_cand = "/en" + path if (path in ("/", "/reviews/", "/works/", "/genres/", "/signup/", "/personas/", "/principles/", "/sources/", "/corrections/", "/privacy/") or path.startswith(("/posts/", "/works/", "/genres/", "/personas/"))) else "/en/"
+        self.pages[path] = self.head(title, desc, "ko") + f'<body>{self.nav(active, en_cand)}<main id="main" class="wrap">{body}</main>{self.foot(en_cand)}</body></html>'
+    def add_en(self, path, title, desc, body, active="", ko_href="/"):
+        self.pages[path] = self.head(title, desc, "en") + f'<body>{self.nav_en(active, ko_href)}<main id="main" class="wrap">{body}</main>{self.foot_en(ko_href)}</body></html>'
 
 def genre_chips(genres, link=True):
     return "".join((f'<a class="badge badge-g" href="/genres/{GENRES[g]}/">{E(g)}</a>' if link else f'<span class="badge">{E(g)}</span>') for g in genres)
@@ -500,6 +512,220 @@ def build(site, dims, personas, works, posts, human, today):
     site.add("/404.html", "페이지를 찾을 수 없어요", "페이지를 찾을 수 없어요.", '<div class="page"><h1>페이지를 찾을 수 없어요</h1><p><a href="/">홈으로</a></p></div>')
     # retired posts (robots.txt audit 2026-10-17: vegetarian-translation-debate, gray-human-reviews) are not generated, so their old URLs 404 and stay unindexable.
 
+
+GENRES_EN_LABEL = {"순문학": "Literary Fiction", "단편·소설집": "Short Stories", "시·에세이": "Poetry & Essay", "SF": "Science Fiction", "판타지": "Fantasy",
+                   "미스터리·스릴러": "Mystery & Thriller", "로맨스": "Romance", "호러": "Horror", "무협": "Wuxia", "웹툰": "Webtoon", "웹소설": "Web Novel"}
+GENRE_NOTE_EN = {"순문학": "Full-length novels, novellas, and literary prize winners", "단편·소설집": "Short story and flash-fiction collections",
+                 "시·에세이": "Poetry collections and literary essays", "SF": "Speculative and science fiction", "판타지": "Fantasy and mythic fiction",
+                 "미스터리·스릴러": "Detective, crime, and thriller fiction", "로맨스": "Romance and romance-fantasy", "호러": "Horror, folklore horror, and weird fiction",
+                 "무협": "Martial-arts (Wuxia) fiction", "웹툰": "Serialized digital comics (Webtoons)", "웹소설": "Serialized digital novels (Web Novels)"}
+MEDIUM_EN_LABEL = {"소설": "Novel", "소설집": "Story Collection", "시집": "Poetry Collection", "에세이": "Essay", "웹툰": "Webtoon", "웹소설": "Web Novel"}
+TIERS_EN = {1: ("Official", "tier-1"), 2: ("Official Notice", "tier-2"), 3: ("Press / Academic", "tier-3"), 4: ("Reference", "tier-4")}
+PERSONA_EN = {
+    "gyeol": ("Gyeol (결)", "Follows the texture of sentences and structural completion", "Literary Fiction · Short Stories · Poetry"),
+    "teum": ("Teum (틈)", "Watches serial pacing, cliffhangers, and episode rhythm", "Webtoons · Web Novels"),
+    "mac": ("Mac (맥)", "Examines worldbuilding coherence and genre conventions", "SF · Fantasy · Mystery · Wuxia"),
+    "gyul": ("Gyul (귤)", "Traces how everyday speech and social debates meet the text", "Social Fiction · Contemporary Debates"),
+    "sol": ("Sol (솔)", "Focuses on historical memory, labor, and collective testimony", "Historical & Social Fiction"),
+    "dam": ("Dam (담)", "Reads adaptations, cross-media transitions, and visual staging", "Webtoons · Cross-Media Works"),
+    "bin": ("Bin (빈)", "Looks at what remains unsaid, omitted, or unverified in the archive", "Poetry · Experimental Fiction"),
+    "hyeon": ("Hyeon (현)", "Tracks translation reception, international prizes, and global readership", "Translated Korean Literature"),
+    "cut": ("Moseori (모서리)", "Sharp editorial criticism confronting factional clichés and aesthetic complacency", "Editorial Columns · Literary & Cultural Criticism"),
+}
+
+def tier_badge_en(t): lab, cls = TIERS_EN[t]; return f'<span class="tier {cls}">{lab}</span>'
+def src_html_en(f): return f'{tier_badge_en(f[2])} <a href="{E(f[3])}" rel="noopener noreferrer">{E(f[4])}</a>'
+def facts_table_en(items):
+    rows = "".join(f'<tr><th>{E(k)}</th><td><span class="v">{E(v)}</span><span class="srcline">{src_html_en((k, v, t, u, l))}</span></td></tr>' for k, v, t, u, l in items)
+    return f'<table class="facts"><tbody>{rows}</tbody></table>'
+TIERKEY_EN = '<div class="tierkey">' + "".join(f'<span>{tier_badge_en(t)}</span>' for t in TIERS_EN) + '<a href="/en/sources/">Source Tiers</a></div>'
+def byline_en(pid):
+    en_name = PERSONA_EN.get(pid, (pid, "", ""))[0]
+    return f'<span class="byline">Editor <b>{E(en_name)}</b></span>'
+def pub_label_en(w):
+    if w["precision"] == "unknown" or not w["pub"]: return "Publication date unverified"
+    if w["precision"] == "year": return f'{w["pub"]}'
+    if w["precision"] == "month": y, m = w["pub"].split("-"); return f"{y}-{int(m):02d}"
+    return w["pub"]
+def genre_chips_en(genres, link=True):
+    return "".join((f'<a class="badge badge-g" href="/en/genres/{GENRES[g]}/">{E(GENRES_EN_LABEL[g])}</a>' if link else f'<span class="badge">{E(GENRES_EN_LABEL[g])}</span>') for g in genres)
+
+def build_en(site, personas, works, human):
+    en_works_path = ROOT / "content/en/works.json"
+    en_posts_path = ROOT / "content/en/posts.json"
+    if not en_works_path.exists() or not en_posts_path.exists(): return
+    en_wdata = json.loads(en_works_path.read_text(encoding="utf-8"))
+    en_posts = json.loads(en_posts_path.read_text(encoding="utf-8"))
+    en_works = []
+    for w in works:
+        ec = en_wdata.get(w["slug"])
+        if not ec: fail(f"missing English work entry for {w['slug']}")
+        en_works.append({**w, "title": ec["title"], "kind": ec["kind"], "summary": ec["summary"],
+                         "author_en": ec.get("author_en") or w["author"], "platform_en": ec.get("platform_en") or w["platform"],
+                         "facts": ec["facts"], "unverified": ec["unverified"], "related": ec.get("related")})
+    works_by = {w["slug"]: w for w in en_works}
+    pbw = {}
+    for p in en_posts:
+        # validate English essay against core essay guards
+        if p.get("work") not in works_by or p.get("persona") not in personas: fail(f"en essay {p.get('slug')}: unknown work or persona")
+        txt = "\n".join([p["title"], p["summary"], p["framing"], *p["body"]])
+        if ESSAY_SCORE.search(txt) or AI_MARK.search(txt): fail(f"en essay {p['slug']}: score or AI mark")
+        pbw.setdefault(p["work"], []).append(p)
+    ordered = [p for _, p in sorted(enumerate(en_posts), key=lambda ip: (ip[1]["date"], ip[0]), reverse=True)]
+    lead, following = ordered[0], ordered[1:10]
+
+    def lead_story_en(p):
+        g = first_fig(p)
+        media = (f'<a class="lead-img" href="/en/posts/{p["slug"]}/"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a>' if g else "")
+        return (f'<section class="front lead-story"><div class="lead-grid"><div class="lead-text"><span class="kicker">Featured Criticism</span>'
+                f'<h1><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h1><p class="card-summary">{E(p["summary"])}</p>'
+                f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
+                f'<div class="cta-row"><a class="cta cta-main" href="/en/posts/{p["slug"]}/">Read Essay →</a></div></div>{media}</div></section>')
+
+    def story_row_en(p, number):
+        g = first_fig(p)
+        thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
+        return (f'<article class="srow"><span class="srow-num">{number:02d}</span><div class="stext"><h3><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+                f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</article>')
+
+    def story_card_en(p):
+        w = works_by[p["work"]]; g = first_fig(p)
+        thumb = (f'<a class="sthumb" href="/en/posts/{p["slug"]}/" aria-hidden="true" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></a>' if g else "")
+        return (f'<article class="scard">{thumb}<div class="chips"><span class="badge">{E(w["title"])}</span></div>'
+                f'<h2><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="ssum">{E(p["summary"])}</p>'
+                f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
+
+    def work_card_en(w):
+        n = len(pbw.get(w["slug"], []))
+        gb = "".join(f'<span class="badge">{E(GENRES_EN_LABEL[g])}</span>' for g in w["genres"])
+        who = " · ".join(x for x in (w["author_en"], w["platform_en"]) if x)
+        return (f'<article class="card"><div class="chips"><span class="badge">{E(MEDIUM_EN_LABEL[w["medium"]])}</span>{gb}</div>'
+                f'<h3><a href="/en/works/{w["slug"]}/">{E(w["title"])}</a></h3><div class="loc">{E(who) if who else "Author unverified"} · {E(pub_label_en(w))}</div>'
+                f'<div class="meta">Criticism: {n} · Verified {dot(w["verified"])}</div></article>')
+
+    genre_nav = "".join(f'<a class="chip-l" href="/en/genres/{GENRES[g]}/">{E(GENRES_EN_LABEL[g])}</a>' for g in GENRES)
+    story_list = (f'<section class="story-list"><div class="story-list-head"><div><span class="kicker">More Criticism</span><h2>Recent Columns</h2></div>'
+                  f'<a href="/en/reviews/">View All</a></div><div class="rows">{"".join(story_row_en(p, i) for i, p in enumerate(following, 2))}</div></section>') if following else ""
+    site.add_en("/en/", f"{BRAND} — Korean Literary, Webtoon & Web Novel Criticism", "Criticism-first webzine for Korean literature, webtoons, and web novels.",
+        f"""{lead_story_en(lead)}
+{story_list}
+<section class="sec"><div class="sec-h"><h2>Browse by Genre</h2><a href="/en/works/">All {len(en_works)} Works</a></div><div class="chip-row">{genre_nav}</div></section>""", "home", "/")
+
+    site.add_en("/en/reviews/", "Criticism", "Goal Lit Editorial Columns in English.",
+        f'<div class="page wide"><h1>Criticism</h1><p class="lead">{len(en_posts)} editorial columns. We never assign numerical or star scores.</p></div><div class="scard-grid">' + "".join(story_card_en(p) for p in ordered) + '</div>', "reviews", "/reviews/")
+
+    groups = "".join(f'<section class="sec"><div class="sec-h"><h2>{E(MEDIUM_EN_LABEL[m])}</h2></div><div class="grid">' + "".join(work_card_en(w) for w in en_works if w["medium"] == m) + '</div></section>' for m in MEDIUM_ORDER if any(w["medium"] == m for w in en_works))
+    site.add_en("/en/works/", "Works", "Verified Korean literature, poetry, essays, webtoons, and web novels.",
+        f'<div class="page wide"><h1>Works</h1><p class="lead">Currently indexing {len(en_works)} works. Every fact carries a source tier and verification date.</p>{TIERKEY_EN}</div>{groups}', "works", "/works/")
+
+    for w in en_works:
+        hr = human.get(w["slug"], [])
+        if len(hr) >= HUMAN_MIN_N: hbody = f'<p><strong>Average {sum(hr)/len(hr):.1f}</strong> · {len(hr)} human readers</p>'
+        else: hbody = f'<p>{len(hr)} human ratings recorded so far. Reader averages are displayed once at least {HUMAN_MIN_N} human ratings are collected.</p>'
+        ps = pbw.get(w["slug"], [])
+        edbody = ("".join(f'<p>{byline_en(p["persona"])} <a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></p>' for p in ps)
+                  or '<p class="muted">No English editorial column has been published for this work yet.</p>')
+        unv = "<h2>What Remains Unverified</h2><ul class='clean warn-list'>" + "".join(f"<li>{E(x)}</li>" for x in w["unverified"]) + "</ul>"
+        srcs = {}
+        for f in w["facts"]: srcs.setdefault(f[3], f[4])
+        if w["related"]: srcs.setdefault(w["related"]["url"], w["related"]["label"])
+        srcl = "".join(f'<li><a href="{E(u)}" rel="noopener noreferrer">{E(l)}</a> <span class="muted">({E(host(u))})</span></li>' for u, l in srcs.items())
+        rel = (f'<p class="related">Related Media · {E(w["related"]["text"])} <span class="cite"><a href="{E(w["related"]["url"])}" rel="noopener noreferrer">{E(w["related"]["label"])}</a></span></p>' if w["related"] else "")
+        who = " · ".join(x for x in (w["author_en"], w["platform_en"]) if x)
+        body = f"""<div class="detail"><p class="crumb"><a href="/en/works/">Works</a> › {E(MEDIUM_EN_LABEL[w["medium"]])}</p>
+<div class="chips"><span class="badge">{E(MEDIUM_EN_LABEL[w["medium"]])}</span>{genre_chips_en(w["genres"])}</div><h1>{E(w["title"])}</h1><p class="muted">{E(w["kind"])} · {E(who) if who else "Author unverified"} · {E(pub_label_en(w))}</p>
+<p class="lead">{E(w["summary"])}</p>{TIERKEY_EN}
+<h2>Criticism</h2><div class="panel editors"><h3>Editorial Columns</h3>{edbody}<p class="muted">Editorial columns never assign numerical or star ratings.</p></div>
+<h2>Verified Work Facts</h2>{facts_table_en(w["facts"])}{rel}
+<h2>Reader Ratings</h2><div class="panel human"><h3>Human Reader Ratings</h3>{hbody}<p class="muted">Counts only verified human reader ratings. Editorial columns are never mixed into reader scores.</p></div>
+{unv}
+<div class="verify"><p><strong>Last Verified: {dot(w["verified"])}</strong></p><p>All sources cited on this page:</p><ul class="clean">{srcl}</ul><p>If any fact is inaccurate, please submit a <a href="/en/corrections/">Correction Request</a>.</p></div>
+<div class="note">This page contains no advertisements or affiliate links.</div></div>"""
+        site.add_en(f'/en/works/{w["slug"]}/', w["title"], f'{w["title"]} — {w["summary"]}'[:150], body, "works", f'/works/{w["slug"]}/')
+
+    for x in en_posts:
+        w = works_by[x["work"]]
+        others = [p for p in ordered if p["slug"] != x["slug"]]
+        nxt = f'<p class="next"><a href="/en/posts/{others[0]["slug"]}/">Next Column: {E(others[0]["title"])}</a></p>' if others else ""
+        figs = {}
+        for g in x.get("figures", []):
+            if (ESSAY_IMG_DIR / g["file"]).exists():
+                figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
+        def para_en(t): return f'<blockquote class="essay-quote"><p>{E(t[2:] if t.startswith("> ") else t[1:])}</p></blockquote>' if t.startswith(">") else f"<p>{E(t)}</p>"
+        paras = "".join(para_en(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
+        body = f"""<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/en/reviews/">Criticism</a> › <a href="/en/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips_en(w["genres"])}</div>
+<h1>{E(x["title"])}</h1>
+<p class="post-byline">{byline_en(x["persona"])} · Published <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p>
+<p class="framing">{E(x["framing"])}</p>
+<div class="essay-body">{paras}</div>
+<div class="verify"><p>If any factual statement requires correction, please contact us via <a href="/en/corrections/">Corrections</a>. This column contains no advertisements or affiliate links.</p></div>{nxt}</div>"""
+        site.add_en(f'/en/posts/{x["slug"]}/', x["title"], x["summary"], body, "reviews", f'/posts/{x["slug"]}/')
+
+    gcards = "".join(f'<article class="card"><h3><a href="/en/genres/{GENRES[g]}/">{E(GENRES_EN_LABEL[g])}</a></h3><div class="loc">{E(GENRE_NOTE_EN[g])}</div><div class="meta">{sum(1 for w in en_works if g in w["genres"])} Works · {sum(len(pbw.get(w["slug"], [])) for w in en_works if g in w["genres"])} Columns</div></article>' for g in GENRES)
+    site.add_en("/en/genres/", "Genres", "Browse Korean literature, webtoons, and web novels by genre.", f'<div class="page wide"><h1>Genres</h1><p class="lead">Works may span more than one genre.</p></div><div class="grid">{gcards}</div>', "genres", "/genres/")
+    for g, gs in GENRES.items():
+        ws = [w for w in en_works if g in w["genres"]]
+        ps = [p for p in ordered if g in works_by[p["work"]]["genres"]]
+        site.add_en(f"/en/genres/{gs}/", GENRES_EN_LABEL[g], f"{GENRES_EN_LABEL[g]} works and criticism.",
+            f'<div class="page wide"><p class="crumb"><a href="/en/genres/">Genres</a></p><h1>{E(GENRES_EN_LABEL[g])}</h1><p class="lead">{E(GENRE_NOTE_EN[g])}</p></div>'
+            + (f'<section class="sec"><div class="sec-h"><h2>Criticism</h2></div><div class="grid">{"".join(story_card_en(p) for p in ps)}</div></section>' if ps else '<div class="todo">No English columns in this genre yet.</div>')
+            + f'<section class="sec"><div class="sec-h"><h2>Works</h2></div><div class="grid">{"".join(work_card_en(w) for w in ws)}</div></section>', "genres", f"/genres/{gs}/")
+
+    def pcard_en(p):
+        en_name, en_tag, en_dom = PERSONA_EN.get(p["id"], (p["name"], p["tagline"], p["domain"]))
+        return (f'<article class="card"><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline_en(p["id"])}<h3 class="tight"><a href="/en/personas/{p["id"]}/">{E(en_name)} — {E(en_tag)}</a></h3></div></div>'
+                f'<div class="loc">{E(en_dom)}</div><div class="meta">Critical Lens v{p["version"]}</div></article>')
+    eds = [p for p in personas.values() if p["kind"] == "section"]; rds = [p for p in personas.values() if p["kind"] == "angle"]
+    site.add_en("/en/personas/", "Editors", "Pen-name editors of Goal Lit.",
+        f'<div class="page"><h1>Pen-Name Editors</h1><p class="lead">Goal Lit columns are written under editorial pen names focusing strictly on texts and public literary discourse. Every pen name discloses its critical lens and blind spots; we never invent fake human biographies or photos.</p></div>'
+        f'<section class="sec"><div class="sec-h"><h2>Section Editors (3)</h2></div><div class="grid">{"".join(pcard_en(p) for p in eds)}</div></section>'
+        f'<section class="sec"><div class="sec-h"><h2>Angle Editors (6)</h2></div><div class="grid">{"".join(pcard_en(p) for p in rds)}</div></section>', "personas", "/personas/")
+    for p in personas.values():
+        en_name, en_tag, en_dom = PERSONA_EN.get(p["id"], (p["name"], p["tagline"], p["domain"]))
+        mine = [x for x in en_posts if x["persona"] == p["id"]]
+        plist = "".join(f'<li><a href="/en/posts/{x["slug"]}/">{E(x["title"])}</a></li>' for x in mine) or '<li class="muted">No English columns published yet.</li>'
+        body = f"""<div class="detail"><p class="crumb"><a href="/en/personas/">Editors</a></p><div class="prow">{glyph(p["glyph"]["shape"], p["glyph"]["color"])}<div>{byline_en(p["id"])}<h1 class="tight">{E(en_name)}</h1></div></div>
+<p class="lead">{E(en_tag)} · Editorial pen name (no personal biography or portrait).</p>
+<h2>Focus Domain</h2><p>{E(en_dom)}</p>
+<h2>Published Columns (EN)</h2><ul class="clean">{plist}</ul></div>"""
+        site.add_en(f'/en/personas/{p["id"]}/', f'Editor {en_name}', f'Editor {en_name} — {en_tag}', body, "personas", f'/personas/{p["id"]}/')
+
+    site.add_en("/en/signup/", "Sign Up · Weekly Newsletter", "One-click Google sign-up and weekly Korean literary criticism newsletter.",
+        """<div class="page"><h1>Sign Up · Weekly Newsletter</h1>
+<p class="lead">Join in three seconds with your Google account—no separate password or registration form required. You can opt into our weekly newsletter at the same time.</p>
+<div class="auth-card" id="auth-box">
+ <form method="GET" action="/api/auth/google" class="auth-form" id="signup-form">
+  <label class="auth-check" for="newsletter-check">
+   <input type="checkbox" name="newsletter" value="1" checked id="newsletter-check">
+   <span><strong>Receive the Tuesday 'One Work · One Critique' Newsletter</strong><br><span class="muted">We send one editorial column and critical briefing by email each week. Unsubscribe anytime.</span></span>
+  </label>
+  <div class="cta-row">
+   <button type="submit" class="cta cta-main auth-btn">Continue with Google</button>
+  </div>
+ </form>
+ <p class="muted auth-note" id="auth-status">We verify only your Google email address without storing passwords. See our <a href="/en/privacy/">Privacy Notice</a> for details.</p>
+</div>
+<script src="/assets/js/auth.js" defer></script></div>""", "signup", "/signup/")
+
+    site.add_en("/en/principles/", "Editorial Principles", "Editorial principles of Goal Lit.",
+        """<div class="page"><h1>Editorial Principles</h1><p class="lead">Goal Lit is a criticism-first webzine for Korean literature, webtoons, and web novels.</p>
+<ul class="clean"><li><strong>Thesis-Driven Criticism:</strong> Editorial columns advance clear critical arguments aimed at works and discourse, never personal attacks on living individuals.</li>
+<li><strong>No Numerical or Star Scores:</strong> Editorial columns never assign ratings, stars, or numerical scores.</li>
+<li><strong>Strict Source Discipline:</strong> Every work page separates verified facts (with dated links) from what remains unverified.</li></ul></div>""", "principles", "/principles/")
+
+    site.add_en("/en/sources/", "Source Tiers", "How Goal Lit classifies citations.",
+        f"""<div class="page"><h1>Source Tiers</h1><p class="lead">Every factual claim on a work page carries one of four source badges:</p>{TIERKEY_EN}
+<ul class="clean"><li><strong>Official (Tier 1):</strong> Direct publisher catalog, platform page, or statutory national bibliography.</li>
+<li><strong>Official Notice (Tier 2):</strong> Prize foundation archive (such as The Booker Prizes or Nobel Prize press releases) or quarterly literary journal table of contents.</li>
+<li><strong>Press / Academic (Tier 3):</strong> Peer-reviewed academic abstracts (KCI / OpenAlex) or dated press coverage.</li>
+<li><strong>Reference (Tier 4):</strong> Supplementary context note.</li></ul></div>""", "about", "/sources/")
+
+    site.add_en("/en/corrections/", "Corrections", "Request a factual correction on Goal Lit.",
+        """<div class="page"><h1>Corrections &amp; Inquiries</h1><p class="lead">If any bibliographic record, date, or citation on Goal Lit differs from primary evidence, please report it via <a href="/corrections/">our corrections page</a> and we will audit and update the entry promptly.</p></div>""", "about", "/corrections/")
+
+    site.add_en("/en/privacy/", "Privacy Notice", "Privacy policy and minimal data handling.",
+        """<div class="page"><h1>Privacy Notice</h1><p class="lead">Goal Lit operates without third-party advertising trackers. When you sign in with Google, we store only your email address, display name, and newsletter opt-in preference in Cloudflare D1.</p></div>""", "about", "/privacy/")
+
 def check_principles(t):
     """Principles page guard (AI-assistance note requirement removed)."""
     return []
@@ -543,7 +769,7 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--today"); ap.add_argument("--out", default=str(DIST)); a = ap.parse_args()
     today = ymd(a.today) if a.today else dt.datetime.now(ZoneInfo("Asia/Seoul")).date()
     dims, personas = load_personas(); works = load_works(); posts = load_posts(personas, works); human = load_human(works)
-    dist = Path(a.out); site = Site(today); build(site, dims, personas, works, posts, human, today)
+    dist = Path(a.out); site = Site(today); build(site, dims, personas, works, posts, human, today); build_en(site, personas, works, human)
     if dist.exists(): shutil.rmtree(dist)
     dist.mkdir(parents=True)
     for path, h in site.pages.items():
