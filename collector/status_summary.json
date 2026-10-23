@@ -1,0 +1,41 @@
+{
+  "brand": "goal-lit",
+  "generated_at_kst": "2026-10-23T10:38:05+09:00",
+  "auto_publish_connected": false,
+  "total_records": 231,
+  "unique_clusters": 126,
+  "stage_counts": {
+    "discovered": 115,
+    "source_checked": 28,
+    "deduped": 25,
+    "verified_ready": 60,
+    "publish_pending": 3
+  },
+  "verified_bundle_breakdown": {
+    "research_bundle": 57,
+    "critique_ready_bundle": 6
+  },
+  "source_access_level_breakdown": {
+    "book_intro": 111,
+    "paper_abstract": 72,
+    "full_text_read": 3,
+    "press_article": 43,
+    "author_interview": 2
+  },
+  "unverified_3category_breakdown": {
+    "서지": 104,
+    "발언": 2,
+    "작품 해석": 11
+  },
+  "collection_path_breakdown": {
+    "auto": 3,
+    "column_evidence": 6,
+    "manual_clip": 1,
+    "migrated_fact": 104,
+    "migrated_unverified": 117
+  },
+  "conflict_records_count": 6,
+  "queue_state_counts": {
+    "queued": 42
+  }
+}

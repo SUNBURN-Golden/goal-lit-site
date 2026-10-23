@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Goal Lit (꼴릿) — 이 자료 담기 클리퍼",
+  "version": "1.0.0",
+  "description": "현재 보고 있는 페이지에서 필요한 문학 서지·발언·비평 근거 영역만 추출해 개인정보를 제거한 뒤 로컬 작업기(goal-lit 수집함)로 전달합니다.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8795/*"
+  ],
+  "optional_host_permissions": [
+    "https://thebookerprizes.com/*",
+    "https://magazine.changbi.com/*",
+    "https://journal.kci.go.kr/*",
+    "https://openalex.org/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "action": {
+    "default_title": "이 자료 담기 (꼴릿 수집함)",
+    "default_popup": "popup.html"
+  }
+}
