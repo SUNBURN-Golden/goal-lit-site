@@ -291,7 +291,6 @@ class Site:
                 f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="index,follow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
                 f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F5"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-                f'<link rel="preload" href="/assets/fonts/Hahmlet-subset.woff2" as="font" type="font/woff2" crossorigin>'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active, en_href="/en/"):
         cur = lambda k: ' aria-current="page"' if active == k else ""
