@@ -2,3 +2,8 @@ site/dist/
 __pycache__/
 *.pyc
 .venv/
+# Local read-only build inputs from the separately maintained content workspace.
+/data
+/personas
+/research
+/.build-tmp/

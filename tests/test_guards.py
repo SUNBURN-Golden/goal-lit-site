@@ -128,6 +128,16 @@ if dist.exists():
         if 'class="detail post-detail essay"' in t and re.search(r"<p>&gt;", t): print("essay block quote rendered as plain paragraph", rel); bad += 1
         if 'class="detail post-detail essay"' in t and ("공개 자료를 정리" in t or "편집부 칼럼" not in t): print("essay page with synthesis notice / without 편집부 칼럼", rel); bad += 1
     print("built-output checks done (%d pages)" % len(txt))
+    # A mockup-only font subset silently loses essay Hangul and Hanja. Verify
+    # both body weights cover every CJK character in the complete generated site.
+    from fontTools.ttLib import TTFont
+    visible = bs.html.unescape("".join(txt.values()))
+    required = {ord(c) for c in visible if '\u3400' <= c <= '\u9fff' or '\uac00' <= c <= '\ud7a3'}
+    for weight in (400, 700):
+        with TTFont(dist / f"assets/fonts/NotoSerifKR-{weight}-subset.woff2") as font:
+            missing = required - set(font.getBestCmap())
+        if missing: print("body font missing CJK glyphs", weight, sorted(missing)); bad += 1
+    print("full-site font coverage checked")
 bs.validate_post(base, personas, works, dnc); print("baseline post passes")
 for p in personas.values(): bs.check_persona(p)
 print("all 9 pen names pass persona guard")

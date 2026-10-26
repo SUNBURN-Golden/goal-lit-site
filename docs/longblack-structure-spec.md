@@ -23,4 +23,5 @@
 
 ## Goal Lit 적용
 - 색: 따뜻한 아이보리 배경 #FAF9F5 + 테라코타 강조 하나(장식 #C96442, 글자·버튼 #B85635). 보라·파스텔 박스는 쓰지 않아요.
-- 폰트: 시스템 폰트 스택(Pretendard 서브셋 유지). 롱블랙 폰트 파일은 쓰지 않음.
+- Superseded 2026-10-26 (owner-approved font decision; historical rule): 폰트: 시스템 폰트 스택(Pretendard 서브셋 유지). 롱블랙 폰트 파일은 쓰지 않음.
+- Current font decision: self-hosted OFL Hahmlet headings with Noto Serif KR fallback, Noto Serif KR 400/700 body. PR1 supplies complete local sources and build-time subsets; PR2 applies the family stacks. Unused Pretendard sources are retired.
