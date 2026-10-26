@@ -45,6 +45,8 @@ with sync_playwright() as pw:
                 assert not result["navOverlap"], (scheme,path,result)
                 assert result["band"] == "4px" and result["arrow"], result
                 assert result["rows"] and "Hahmlet" in result["font"], result
+                lead_alt = page.locator(".lead-img img").get_attribute("alt")
+                assert lead_alt and page.get_by_role("img", name=lead_alt, exact=True).count() == 1, path
                 if args.screenshots and path == "/" and width in (390,1440):
                     page.screenshot(path=str(args.screenshots / f"home-{width}-{scheme}.png"), full_page=True)
                 print(scheme,width,path,"PASS")

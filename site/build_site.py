@@ -345,7 +345,7 @@ def first_fig(p):
 
 def lead_story(p, personas, works_by):
     pe = personas[p["persona"]]; g = first_fig(p)
-    media = (f'<figure class="lead-figure"><a class="lead-img" href="/posts/{p["slug"]}/" tabindex="-1" aria-hidden="true"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
+    media = (f'<figure class="lead-figure"><a class="lead-img" href="/posts/{p["slug"]}/" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
     subtitle = f'<p class="lead-subtitle">{E(p["subtitle"])}</p>' if p.get("subtitle") else ""
     return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">오늘의 평론</h2><article class="lead-grid">'
             f'<h1><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text">{subtitle}<p class="card-summary">{E(p["summary"])}</p>'
@@ -578,7 +578,7 @@ def build_en(site, personas, works, human):
 
     def lead_story_en(p):
         g = first_fig(p)
-        media = (f'<figure class="lead-figure"><a class="lead-img" href="/en/posts/{p["slug"]}/" tabindex="-1" aria-hidden="true"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
+        media = (f'<figure class="lead-figure"><a class="lead-img" href="/en/posts/{p["slug"]}/" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
         return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">Featured Criticism</h2><article class="lead-grid">'
                 f'<h1><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text"><p class="card-summary">{E(p["summary"])}</p>'
                 f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
