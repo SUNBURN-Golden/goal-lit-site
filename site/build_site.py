@@ -345,18 +345,18 @@ def first_fig(p):
 
 def lead_story(p, personas, works_by):
     pe = personas[p["persona"]]; g = first_fig(p)
-    media = (f'<a class="lead-img" href="/posts/{p["slug"]}/"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a>' if g else "")
+    media = (f'<figure class="lead-figure"><a class="lead-img" href="/posts/{p["slug"]}/" tabindex="-1" aria-hidden="true"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
     subtitle = f'<p class="lead-subtitle">{E(p["subtitle"])}</p>' if p.get("subtitle") else ""
-    return (f'<section class="front lead-story"><div class="lead-grid"><div class="lead-text"><span class="kicker">오늘의 평론</span>'
-            f'<h1><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h1>{subtitle}<p class="card-summary">{E(p["summary"])}</p>'
+    return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">오늘의 평론</h2><article class="lead-grid">'
+            f'<h1><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text">{subtitle}<p class="card-summary">{E(p["summary"])}</p>'
             f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
-            f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 →</a></div></div>{media}</div></section>')
+            f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 <span aria-hidden="true">→</span></a></div></div>{media}</article></section>')
 
-def story_row(p, personas, works_by, number):
+def story_row(p, personas, works_by):
     pe = personas[p["persona"]]; g = first_fig(p)
     thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
-    return (f'<article class="srow"><span class="srow-num">{number:02d}</span><div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</article>')
+    return (f'<li class="srow"><div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
 
 def story_card(p, personas, works_by):
     pe = personas[p["persona"]]; w = works_by[p["work"]]; g = first_fig(p)
@@ -375,8 +375,8 @@ def build(site, dims, personas, works, posts, human, today):
     lead, following = ordered[0], ordered[1:10]
     # ---- home: featured critique, then the remaining reviews
     genre_nav = "".join(f'<a class="chip-l" href="/genres/{GENRES[g]}/">{E(g)}</a>' for g in GENRES)
-    story_list = (f'<section class="story-list"><div class="story-list-head"><div><span class="kicker">이어서 읽기</span><h2>지난 평론</h2></div>'
-                  f'<a href="/reviews/">전체 보기</a></div><div class="rows">{"".join(story_row(p, personas, works_by, i) for i, p in enumerate(following, 2))}</div></section>') if following else ""
+    story_list = (f'<section class="story-list" aria-labelledby="more-heading"><h2 class="margin-heading" id="more-heading">이어서 읽기</h2><div class="story-list-main"><div class="story-list-head"><h3 class="margin-heading">지난 평론</h3>'
+                  f'<a href="/reviews/">전체 보기</a></div><ol class="rows" role="list">{"".join(story_row(p, personas, works_by) for p in following)}</ol></div></section>') if following else ""
     site.add("/", f"{BRAND} — {TAGLINE}", "한국 문학·웹툰·웹소설 평론 웹진.",
         f'''{lead_story(lead, personas, works_by)}
 {story_list}
@@ -578,17 +578,17 @@ def build_en(site, personas, works, human):
 
     def lead_story_en(p):
         g = first_fig(p)
-        media = (f'<a class="lead-img" href="/en/posts/{p["slug"]}/"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a>' if g else "")
-        return (f'<section class="front lead-story"><div class="lead-grid"><div class="lead-text"><span class="kicker">Featured Criticism</span>'
-                f'<h1><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h1><p class="card-summary">{E(p["summary"])}</p>'
+        media = (f'<figure class="lead-figure"><a class="lead-img" href="/en/posts/{p["slug"]}/" tabindex="-1" aria-hidden="true"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
+        return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">Featured Criticism</h2><article class="lead-grid">'
+                f'<h1><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text"><p class="card-summary">{E(p["summary"])}</p>'
                 f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
-                f'<div class="cta-row"><a class="cta cta-main" href="/en/posts/{p["slug"]}/">Read Essay →</a></div></div>{media}</div></section>')
+                f'<div class="cta-row"><a class="cta cta-main" href="/en/posts/{p["slug"]}/">Read Essay <span aria-hidden="true">→</span></a></div></div>{media}</article></section>')
 
-    def story_row_en(p, number):
+    def story_row_en(p):
         g = first_fig(p)
         thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
-        return (f'<article class="srow"><span class="srow-num">{number:02d}</span><div class="stext"><h3><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-                f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</article>')
+        return (f'<li class="srow"><div class="stext"><h3><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
+                f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
 
     def story_card_en(p):
         w = works_by[p["work"]]; g = first_fig(p)
@@ -606,8 +606,8 @@ def build_en(site, personas, works, human):
                 f'<div class="meta">Criticism: {n} · Verified {dot(w["verified"])}</div></article>')
 
     genre_nav = "".join(f'<a class="chip-l" href="/en/genres/{GENRES[g]}/">{E(GENRES_EN_LABEL[g])}</a>' for g in GENRES)
-    story_list = (f'<section class="story-list"><div class="story-list-head"><div><span class="kicker">More Criticism</span><h2>Recent Columns</h2></div>'
-                  f'<a href="/en/reviews/">View All</a></div><div class="rows">{"".join(story_row_en(p, i) for i, p in enumerate(following, 2))}</div></section>') if following else ""
+    story_list = (f'<section class="story-list" aria-labelledby="more-heading"><h2 class="margin-heading" id="more-heading">More Criticism</h2><div class="story-list-main"><div class="story-list-head"><h3 class="margin-heading">Recent Columns</h3>'
+                  f'<a href="/en/reviews/">View All</a></div><ol class="rows" role="list">{"".join(story_row_en(p) for p in following)}</ol></div></section>') if following else ""
     site.add_en("/en/", f"{BRAND} — Korean Literary, Webtoon & Web Novel Criticism", "Criticism-first webzine for Korean literature, webtoons, and web novels.",
         f"""{lead_story_en(lead)}
 {story_list}
