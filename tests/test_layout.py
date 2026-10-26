@@ -1,5 +1,5 @@
 """Check built pages without starting a server; all browser requests stay local."""
-import argparse, mimetypes
+import argparse, json, mimetypes
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 from playwright.sync_api import sync_playwright
@@ -55,13 +55,19 @@ with sync_playwright() as pw:
                     page.screenshot(path=str(args.screenshots / f"home-{width}-{scheme}.png"), full_page=True)
                 print(scheme,width,path,"PASS")
             page.close()
+    essays = [post for post in json.loads((ROOT / "site/content/posts.json").read_text(encoding="utf-8"))
+              if post.get("type") == "essay"]
+    longest_essay = max(essays, key=lambda post: sum(len(paragraph) for paragraph in post["body"]))
+    essay_url = f"http://goal-lit.test/posts/{longest_essay['slug']}/"
     # The longest shipped essay: inspect real line geometry, including Korean
     # keep-all words, rather than merely checking the stylesheet declarations.
     for scheme in ("light", "dark"):
-        for width in (390,1440):
+        for width in (390,480,600,640,641,1440):
             page = browser.new_page(viewport={"width":width,"height":900}, color_scheme=scheme)
             page.route("**/*", local_route)
-            page.goto("http://goal-lit.test/posts/pointed-awl-pose/")
+            response = page.goto(essay_url)
+            assert response and response.ok, essay_url
+            assert page.locator(".essay-body p").count(), essay_url
             page.evaluate("document.fonts.ready")
             page.locator("img").evaluate_all("""async images => {
                 for (const img of images) img.loading = 'eager';
@@ -93,13 +99,16 @@ with sync_playwright() as pw:
             }""")
             assert not reading["overflow"], reading
             assert reading["measure"] <= 612.1 and reading["largestGap"] < 36, reading
-            assert reading["align"] == ("start" if width <= 420 else "justify"), reading
+            assert reading["align"] == ("start" if width <= 640 else "justify"), reading
             assert reading["size"] == "18px" and reading["break"] == "keep-all", reading
             assert abs(float(reading["line"].removesuffix("px")) - 34.2) < .1, reading
             if args.screenshots:
                 page.locator('.essay-body > p').first.screenshot(path=str(args.screenshots / f"essay-{width}-{scheme}.png"))
+            assert page.locator('.read-progress').count() == 0
+            page.emulate_media(reduced_motion="no-preference")
+            assert page.evaluate("getComputedStyle(document.documentElement).scrollBehavior") == "smooth"
             page.emulate_media(reduced_motion="reduce")
-            assert page.locator('.read-progress').evaluate("x => getComputedStyle(x).display") == "none"
+            assert page.evaluate("getComputedStyle(document.documentElement).scrollBehavior") == "auto"
             page.goto("http://goal-lit.test/")
             assert page.locator('.lead-img img').evaluate("x => getComputedStyle(x).transitionDuration") == "0s"
             page.locator('.skip').focus()

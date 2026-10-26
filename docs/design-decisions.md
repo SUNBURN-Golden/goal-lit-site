@@ -29,12 +29,14 @@ exception); UI tokens and persona glyph styling contain no purple.
 ## Essay reading
 
 Noto Serif KR is 18px with 1.9 line height and a 34em (612px) maximum measure.
-Paragraphs justify with the last line aligned to the start; at 420px and below
+Paragraphs justify with the last line aligned to the start; at 640px and below
 all lines align to the start to avoid wide Korean word gaps. Block quote rules
 use the text-colour rule token. The old 580px reading width is superseded for
 essays only. The reference-site measurements remain historical observations.
 
-The scroll-progress animation is retired so the sole animated interaction is
-lead-image opacity. Reduced motion disables that transition. The owner's held
-4px body band and CTA arrows remain. Surfaces are reserved for focus/skip UI;
-reading panels share the page background.
+The scroll-progress animation is deliberately retired, including its unused
+markup in both editions, so lead-image opacity is the sole CSS transition.
+Smooth anchor scrolling remains available under
+`prefers-reduced-motion: no-preference`; reduced motion disables it and the
+opacity transition. The owner's held 4px body band and CTA arrows remain.
+Surfaces are reserved for focus/skip UI; reading panels share the page background.

@@ -35,6 +35,7 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;border-top:4px solid var(--accent);background:var(--bg);color:var(--text);font:400 var(--fs-3)/var(--lh-body) var(--font);word-break:keep-all;overflow-wrap:break-word}
 a{color:var(--text);text-underline-offset:3px;transition:none}
 a:hover{color:var(--text-muted)}
@@ -213,8 +214,7 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .next a{display:inline-flex;align-items:center;min-height:44px;padding:var(--s-3) 0;font-size:var(--fs-4);font-weight:700;color:var(--text);text-decoration:none}
 .next a:hover{text-decoration:underline}
 /* Essay reading: 34em measure, with ragged lines on narrow screens.
-   Only lead-image opacity animates; the held body accent band remains. */
-.read-progress{display:none}
+   Lead-image opacity is the only transition; the held body accent band remains. */
 .detail.essay{max-width:612px}
 .essay-body{font-family:var(--font);font-size:18px;max-width:34em;margin-inline:auto}
 .essay-body p{font:400 18px/1.9 var(--font);letter-spacing:-.2px;margin:0 0 36px;color:var(--text);text-align:justify;text-align-last:start;hanging-punctuation:allow-end;max-width:34em}
@@ -235,7 +235,6 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 @media(min-width:1024px){.scard-grid{grid-template-columns:repeat(3,1fr)}}
 @media(prefers-reduced-motion:reduce){
  html{scroll-behavior:auto}
- .read-progress{display:none}
  *,*:before,*:after{transition:none!important;animation:none!important}
 }
 
@@ -286,4 +285,4 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .meta .byline,.post-byline .byline{font-size:inherit}
 .date-label{display:inline-flex;align-items:baseline;column-gap:6px}
 time{font-variant-numeric:tabular-nums lining-nums}
-@media(max-width:420px){.essay-body p{text-align:start}}
+@media(max-width:640px){.essay-body p{text-align:start}}

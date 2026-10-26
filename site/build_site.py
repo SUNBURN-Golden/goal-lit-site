@@ -465,7 +465,7 @@ def build(site, dims, personas, works, posts, human, today):
             # a body paragraph that starts with '> ' is a block quote (essay only; quoted for criticism, 준태님 원고 그대로)
             def para(t): return f'<blockquote class="essay-quote"><p>{E(t[2:] if t.startswith("> ") else t[1:])}</p></blockquote>' if t.startswith(">") else f"<p>{E(t)}</p>"
             paras = "".join(para(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
-            body = f'''<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
+            body = f'''<div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
 <p class="post-byline">{byline(pe)}<span class="date-label">작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></span></p>
 <p class="framing">{E(x["framing"])}</p>
@@ -655,7 +655,7 @@ def build_en(site, personas, works, human):
                 figs.setdefault(g["after"], []).append(f'<figure class="essay-fig"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="lazy" decoding="async"></figure>')
         def para_en(t): return f'<blockquote class="essay-quote"><p>{E(t[2:] if t.startswith("> ") else t[1:])}</p></blockquote>' if t.startswith(">") else f"<p>{E(t)}</p>"
         paras = "".join(para_en(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
-        body = f"""<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/en/reviews/">Criticism</a> › <a href="/en/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips_en(w["genres"])}</div>
+        body = f"""<div class="detail post-detail essay"><p class="crumb"><a href="/en/reviews/">Criticism</a> › <a href="/en/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips_en(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
 <p class="post-byline">{byline_en(x["persona"])}<span class="date-label">Published <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></span></p>
 <p class="framing">{E(x["framing"])}</p>
