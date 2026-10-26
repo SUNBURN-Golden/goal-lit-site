@@ -1,5 +1,5 @@
 """Check built pages without starting a server; all browser requests stay local."""
-import argparse, mimetypes
+import argparse, json, mimetypes
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 from playwright.sync_api import sync_playwright
@@ -54,5 +54,66 @@ with sync_playwright() as pw:
                 if args.screenshots and path == "/" and width in (390,1440):
                     page.screenshot(path=str(args.screenshots / f"home-{width}-{scheme}.png"), full_page=True)
                 print(scheme,width,path,"PASS")
+            page.close()
+    essays = [post for post in json.loads((ROOT / "site/content/posts.json").read_text(encoding="utf-8"))
+              if post.get("type") == "essay"]
+    longest_essay = max(essays, key=lambda post: sum(len(paragraph) for paragraph in post["body"]))
+    essay_url = f"http://goal-lit.test/posts/{longest_essay['slug']}/"
+    # The longest shipped essay: inspect real line geometry, including Korean
+    # keep-all words, rather than merely checking the stylesheet declarations.
+    for scheme in ("light", "dark"):
+        for width in (390,480,600,640,641,1440):
+            page = browser.new_page(viewport={"width":width,"height":900}, color_scheme=scheme)
+            page.route("**/*", local_route)
+            response = page.goto(essay_url)
+            assert response and response.ok, essay_url
+            assert page.locator(".essay-body p").count(), essay_url
+            page.evaluate("document.fonts.ready")
+            page.locator("img").evaluate_all("""async images => {
+                for (const img of images) img.loading = 'eager';
+                await Promise.all(images.map(img => img.decode()));
+            }""")
+            reading = page.evaluate(r"""() => {
+                const paragraphs = [...document.querySelectorAll('.essay-body p')];
+                let largestGap = 0;
+                for (const p of paragraphs) {
+                    const node = p.firstChild;
+                    if (!node || node.nodeType !== Node.TEXT_NODE) continue;
+                    let previous;
+                    for (const word of node.textContent.matchAll(/\S+/g)) {
+                        const range = document.createRange();
+                        range.setStart(node, word.index);
+                        range.setEnd(node, word.index + word[0].length);
+                        const rects = [...range.getClientRects()];
+                        const first = rects[0], last = rects.at(-1);
+                        if (previous && first && Math.abs(first.top - previous.top) < 1)
+                            largestGap = Math.max(largestGap, first.left - previous.right);
+                        previous = last;
+                    }
+                }
+                const first = paragraphs[0], css = getComputedStyle(first);
+                return {overflow:document.documentElement.scrollWidth > innerWidth,
+                    measure:first.getBoundingClientRect().width, largestGap,
+                    align:css.textAlign, last:css.textAlignLast, font:css.fontFamily,
+                    size:css.fontSize, line:css.lineHeight, break:css.wordBreak};
+            }""")
+            assert not reading["overflow"], reading
+            assert reading["measure"] <= 612.1 and reading["largestGap"] < 36, reading
+            assert reading["align"] == ("start" if width <= 640 else "justify"), reading
+            assert reading["size"] == "18px" and reading["break"] == "keep-all", reading
+            assert abs(float(reading["line"].removesuffix("px")) - 34.2) < .1, reading
+            if args.screenshots:
+                page.locator('.essay-body > p').first.screenshot(path=str(args.screenshots / f"essay-{width}-{scheme}.png"))
+            assert page.locator('.read-progress').count() == 0
+            page.emulate_media(reduced_motion="no-preference")
+            assert page.evaluate("getComputedStyle(document.documentElement).scrollBehavior") == "smooth"
+            page.emulate_media(reduced_motion="reduce")
+            assert page.evaluate("getComputedStyle(document.documentElement).scrollBehavior") == "auto"
+            page.goto("http://goal-lit.test/")
+            assert page.locator('.lead-img img').evaluate("x => getComputedStyle(x).transitionDuration") == "0s"
+            page.locator('.skip').focus()
+            focus = page.locator('.skip').evaluate("x => ({x:x.getBoundingClientRect().left, outline:getComputedStyle(x).outlineStyle})")
+            assert focus["x"] >= 0 and focus["outline"] == "solid", focus
+            print(scheme,width,"essay, reduced motion and focus PASS",reading)
             page.close()
     browser.close()
