@@ -8,6 +8,10 @@ are self-hosted and subset against every generated page. Both colour schemes,
 Korean keep-all wrapping, accessible contrast, 44px controls and reduced motion
 remain required. Radii are 0 or 2px; images use 0.
 
+Persona glyphs intentionally share the accent token in both colour schemes.
+CSS overrides the nine stored persona colours to keep purple out of the UI;
+the underlying persona colour data is preserved.
+
 Superseded: the warm ivory/terracotta and system-font/Pretendard rules in
 `longblack-structure-spec.md`, retained there with dated supersession markers.
 Earlier light-only or home-colour-only constraints do not apply to this rollout.
