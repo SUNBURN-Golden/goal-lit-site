@@ -1,5 +1,8 @@
 /* Goal Lit — editorial redesign (롱블랙 실측 기반). Components use semantic tokens only;
    raw hex values live only in :root and the dark override below. */
+@font-face{font-family:"Hahmlet";font-weight:100 900;font-style:normal;font-display:swap;src:url("../fonts/Hahmlet-subset.woff2") format("woff2")}
+@font-face{font-family:"Noto Serif KR";font-weight:400;font-style:normal;font-display:swap;src:url("../fonts/NotoSerifKR-400-subset.woff2") format("woff2")}
+@font-face{font-family:"Noto Serif KR";font-weight:700;font-style:normal;font-display:swap;src:url("../fonts/NotoSerifKR-700-subset.woff2") format("woff2")}
 :root{
  --bg:#FAF9F5;--surface:#FFFFFF;--surface-2:#F2F1EE;
  --text:#1A1A1A;--text-muted:#5E5D59;--border:#E4E2DD;--rule:#1A1A1A;

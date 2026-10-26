@@ -14,11 +14,12 @@ Design (준태님): writers appear as plain pen-name 에디터 bylines. No per-p
 The build REFUSES to publish if a post lacks its public-synthesis framing + dated source list, makes an "I read/watched it" claim,
 carries a star/score, has a long quote, copies a known source sentence, cites an unknown source, if a pen name gets an invented
 human biography/photo/age/job, if editor opinion leaks into human-rating views,
-or if a work has no tier 1-3 fact. Public pages carry robots index,follow; robots.txt allows all and lists the sitemap; the build fails if noindex is left on a public page. Stdlib only.
+or if a work has no tier 1-3 fact. Public pages carry robots index,follow; robots.txt allows all and lists the sitemap; the build fails if noindex is left on a public page. Font subsetting requires fontTools and brotli.
 Nothing is deployed, sent or requested over the network.
 """
 import argparse, csv, datetime as dt, html, json, re, shutil, sys
 from pathlib import Path
+from html.parser import HTMLParser
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
@@ -765,6 +766,46 @@ def leak_check(dist):
     if re.search(r"https?://[^\"' >]*(google-analytics|googletagmanager|facebook\.net|doubleclick|hotjar|clarity\.ms)", alltxt): bad.append(("*", "tracker", ""))
     return bad
 
+def subset_fonts(pages, destination):
+    """Subset the licensed local sources to all rendered Korean and English text.
+
+    Parse entities and text attributes as well as text nodes (including Hanja).
+    Full sources stay in the repository; only the subsets and licences are served.
+    """
+    from fontTools import subset
+    from fontTools.ttLib import TTFont
+
+    class PageText(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.parts = []
+
+        def handle_data(self, data):
+            self.parts.append(data)
+
+        def handle_starttag(self, tag, attrs):
+            self.parts.extend(value for key, value in attrs if value and key in
+                              {"alt", "title", "aria-label", "placeholder", "value", "content"})
+
+    parser = PageText()
+    for page in pages.values():
+        parser.feed(page)
+    text = "".join(parser.parts) + "".join(chr(n) for n in range(32, 127))
+    font_dir = ROOT / "static/fonts"
+    destination.mkdir(parents=True, exist_ok=True)
+    for name in ("Hahmlet", "NotoSerifKR-400", "NotoSerifKR-700"):
+        font = TTFont(font_dir / "sources" / f"{name}.woff2", recalcTimestamp=False)
+        options = subset.Options()
+        options.flavor = "woff2"
+        subsetter = subset.Subsetter(options=options)
+        subsetter.populate(text=text)
+        subsetter.subset(font)
+        font.save(destination / f"{name}-subset.woff2")
+        font.close()
+    for licence in font_dir.glob("OFL-*.txt"):
+        shutil.copy(licence, destination / licence.name)
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--today"); ap.add_argument("--out", default=str(DIST)); a = ap.parse_args()
     today = ymd(a.today) if a.today else dt.datetime.now(ZoneInfo("Asia/Seoul")).date()
@@ -776,6 +817,7 @@ def main():
         p = dist / path.lstrip("/") if path.endswith(".html") else dist / path.lstrip("/") / "index.html"
         p.parent.mkdir(parents=True, exist_ok=True); p.write_text(h, encoding="utf-8")
     (dist / "assets").mkdir(); shutil.copytree(ROOT / "static/css", dist / "assets/css")
+    subset_fonts(site.pages, dist / "assets/fonts")
     if (ROOT / "static/js").exists(): shutil.copytree(ROOT / "static/js", dist / "assets/js")
     if (ROOT / "static/img").exists(): shutil.copytree(ROOT / "static/img", dist / "assets/img")
     shutil.copy(ROOT / "static/favicon.svg", dist / "favicon.svg")
