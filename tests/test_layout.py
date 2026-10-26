@@ -55,4 +55,56 @@ with sync_playwright() as pw:
                     page.screenshot(path=str(args.screenshots / f"home-{width}-{scheme}.png"), full_page=True)
                 print(scheme,width,path,"PASS")
             page.close()
+    # The longest shipped essay: inspect real line geometry, including Korean
+    # keep-all words, rather than merely checking the stylesheet declarations.
+    for scheme in ("light", "dark"):
+        for width in (390,1440):
+            page = browser.new_page(viewport={"width":width,"height":900}, color_scheme=scheme)
+            page.route("**/*", local_route)
+            page.goto("http://goal-lit.test/posts/pointed-awl-pose/")
+            page.evaluate("document.fonts.ready")
+            page.locator("img").evaluate_all("""async images => {
+                for (const img of images) img.loading = 'eager';
+                await Promise.all(images.map(img => img.decode()));
+            }""")
+            reading = page.evaluate(r"""() => {
+                const paragraphs = [...document.querySelectorAll('.essay-body p')];
+                let largestGap = 0;
+                for (const p of paragraphs) {
+                    const node = p.firstChild;
+                    if (!node || node.nodeType !== Node.TEXT_NODE) continue;
+                    let previous;
+                    for (const word of node.textContent.matchAll(/\S+/g)) {
+                        const range = document.createRange();
+                        range.setStart(node, word.index);
+                        range.setEnd(node, word.index + word[0].length);
+                        const rects = [...range.getClientRects()];
+                        const first = rects[0], last = rects.at(-1);
+                        if (previous && first && Math.abs(first.top - previous.top) < 1)
+                            largestGap = Math.max(largestGap, first.left - previous.right);
+                        previous = last;
+                    }
+                }
+                const first = paragraphs[0], css = getComputedStyle(first);
+                return {overflow:document.documentElement.scrollWidth > innerWidth,
+                    measure:first.getBoundingClientRect().width, largestGap,
+                    align:css.textAlign, last:css.textAlignLast, font:css.fontFamily,
+                    size:css.fontSize, line:css.lineHeight, break:css.wordBreak};
+            }""")
+            assert not reading["overflow"], reading
+            assert reading["measure"] <= 612.1 and reading["largestGap"] < 36, reading
+            assert reading["align"] == ("start" if width <= 420 else "justify"), reading
+            assert reading["size"] == "18px" and reading["break"] == "keep-all", reading
+            assert abs(float(reading["line"].removesuffix("px")) - 34.2) < .1, reading
+            if args.screenshots:
+                page.locator('.essay-body > p').first.screenshot(path=str(args.screenshots / f"essay-{width}-{scheme}.png"))
+            page.emulate_media(reduced_motion="reduce")
+            assert page.locator('.read-progress').evaluate("x => getComputedStyle(x).display") == "none"
+            page.goto("http://goal-lit.test/")
+            assert page.locator('.lead-img img').evaluate("x => getComputedStyle(x).transitionDuration") == "0s"
+            page.locator('.skip').focus()
+            focus = page.locator('.skip').evaluate("x => ({x:x.getBoundingClientRect().left, outline:getComputedStyle(x).outlineStyle})")
+            assert focus["x"] >= 0 and focus["outline"] == "solid", focus
+            print(scheme,width,"essay, reduced motion and focus PASS",reading)
+            page.close()
     browser.close()

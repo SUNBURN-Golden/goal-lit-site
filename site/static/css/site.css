@@ -35,7 +35,6 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{margin:0;border-top:4px solid var(--accent);background:var(--bg);color:var(--text);font:400 var(--fs-3)/var(--lh-body) var(--font);word-break:keep-all;overflow-wrap:break-word}
 a{color:var(--text);text-underline-offset:3px;transition:none}
 a:hover{color:var(--text-muted)}
@@ -85,7 +84,7 @@ p{margin:0 0 1em}
 /* detail — 580px reading column */
 .detail{max-width:var(--measure);margin-inline:auto}
 .post-detail{line-height:var(--lh-prose)}
-.crumb{font-size:var(--fs-1);color:var(--text-muted);margin:var(--s-5) 0 var(--s-2)}.crumb a{color:var(--text-muted)}
+.crumb{font-size:var(--fs-1);color:var(--text-muted);margin:var(--s-5) 0 var(--s-2)}.crumb a{display:inline-flex;align-items:center;min-width:44px;min-height:44px;color:var(--text-muted)}
 .detail h1{font-size:var(--fs-7);line-height:44px;margin:0 0 var(--s-5)}
 .essay h1{border-top:2px solid var(--rule);padding-top:var(--s-4)}
 .post-byline{font-size:var(--fs-1);color:var(--text-muted);border-bottom:1px solid var(--border);padding-bottom:var(--s-4);margin:0 0 var(--s-6)}
@@ -131,7 +130,7 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .ops li{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-m);padding:var(--s-3) var(--s-4)}
 .cite{font-size:var(--fs-1);color:var(--text-muted);margin-left:4px}
 .panels{display:grid;gap:var(--s-4);grid-template-columns:1fr}
-.panel{border:1px solid var(--border);border-radius:var(--r-m);padding:var(--s-4);background:var(--surface)}
+.panel{border:1px solid var(--border);border-radius:var(--r-m);padding:var(--s-4);background:var(--bg)}
 .panel h3{margin:0 0 6px;font-size:var(--fs-3)}
 .panel.human{border-style:dashed}
 .panel.editors{border-color:var(--text)}
@@ -213,14 +212,15 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .next{margin:var(--s-6) 0 0;border-top:1px solid var(--border)}
 .next a{display:inline-flex;align-items:center;min-height:44px;padding:var(--s-3) 0;font-size:var(--fs-4);font-weight:700;color:var(--text);text-decoration:none}
 .next a:hover{text-decoration:underline}
-/* essay type (편집부 칼럼) + CSS-only read progress */
-.read-progress{position:fixed;top:0;left:0;height:3px;width:100%;background:var(--accent);transform-origin:0 50%;transform:scaleX(0);display:none;z-index:60}
-@supports (animation-timeline:scroll()){.read-progress{display:block;animation:grow linear both;animation-timeline:scroll(root)}}
-@keyframes grow{to{transform:scaleX(1)}}
-.essay-body p{font-size:var(--fs-4);line-height:1.9;letter-spacing:-.2px;margin:0 0 36px;color:var(--text)}
+/* Essay reading: 34em measure, with ragged lines on narrow screens.
+   Only lead-image opacity animates; the held body accent band remains. */
+.read-progress{display:none}
+.detail.essay{max-width:612px}
+.essay-body{font-family:var(--font);font-size:18px;max-width:34em;margin-inline:auto}
+.essay-body p{font:400 18px/1.9 var(--font);letter-spacing:-.2px;margin:0 0 36px;color:var(--text);text-align:justify;text-align-last:start;hanging-punctuation:allow-end;max-width:34em}
 .essay-fig{margin:40px 0}
 .essay-fig img{display:block;width:100%;height:auto;border-radius:0}
-.essay-quote{margin:36px 0;padding:4px 0 4px 20px;border-left:2px solid var(--rule)}
+.essay-quote{margin:36px 0;padding:4px 0 4px 20px;border-inline-start:2px solid var(--rule)}
 .essay-quote p{margin:0;font-size:var(--fs-4);line-height:1.9;color:var(--text-muted)}
 @media(min-width:720px){
  .sec{margin:var(--s-8) 0}
@@ -286,3 +286,4 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .meta .byline,.post-byline .byline{font-size:inherit}
 .date-label{display:inline-flex;align-items:baseline;column-gap:6px}
 time{font-variant-numeric:tabular-nums lining-nums}
+@media(max-width:420px){.essay-body p{text-align:start}}
