@@ -128,6 +128,14 @@ if dist.exists():
         if 'class="detail post-detail essay"' in t and re.search(r"<p>&gt;", t): print("essay block quote rendered as plain paragraph", rel); bad += 1
         if 'class="detail post-detail essay"' in t and ("공개 자료를 정리" in t or "편집부 칼럼" not in t): print("essay page with synthesis notice / without 편집부 칼럼", rel); bad += 1
     print("built-output checks done (%d pages)" % len(txt))
+    for home in (dist / "index.html", dist / "en/index.html"):
+        t = txt[home]
+        if 'class="kicker"' in t or 'srow-num' in t or '<ol class="rows" role="list">' not in t:
+            print("home must use margin headings and an ordered review list", home); bad += 1
+        if not re.search(r'<h2 class="margin-heading" id="today-heading">[^<]+</h2>', t):
+            print("home missing the lead section heading", home); bad += 1
+        if not re.search(r'class="cta cta-main"[^>]*>[^<]+<span aria-hidden="true">→</span>', t):
+            print("held CTA arrow missing", home); bad += 1
     # A mockup-only font subset silently loses essay Hangul and Hanja. Verify
     # both body weights cover every CJK character in the complete generated site.
     from fontTools.ttLib import TTFont

@@ -4,3 +4,17 @@
 공개 홍보·계정·발송 없음. 빌드/테스트 명령은 PLAN.md 맨 아래.
 
 Build prerequisites: Python with `fonttools[woff]` and `brotli`.
+
+Browser layout checks require the Python `playwright` package and its Chromium
+browser. Install the prerequisites once, then run from the repository root:
+
+```sh
+python -m pip install "fonttools[woff]" brotli playwright
+python -m playwright install chromium
+python site/build_site.py
+python tests/test_guards.py
+python tests/test_layout.py
+```
+
+The layout test checks both editions and colour schemes at multiple widths.
+It routes browser requests to `site/dist` locally and needs no preview server.

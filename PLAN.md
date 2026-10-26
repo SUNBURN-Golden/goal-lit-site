@@ -94,3 +94,17 @@ cd /workspace/lit-hub/site
 python3 -m http.server 8000 --directory dist      # 로컬 미리보기
 python3 ../tools/gen_personas_md.py   # (gen_works/gen_posts 비활성: robots.txt 감사 2026-10-17, research/SOURCE_AUDIT.md 참조)
 ```
+
+Browser layout checks require the Python `playwright` package and its Chromium
+browser. Install the prerequisites once, then run from the repository root:
+
+```sh
+python -m pip install "fonttools[woff]" brotli playwright
+python -m playwright install chromium
+python site/build_site.py
+python tests/test_guards.py
+python tests/test_layout.py
+```
+
+The layout test checks both editions and colour schemes at multiple widths.
+It routes browser requests to `site/dist` locally and needs no preview server.
