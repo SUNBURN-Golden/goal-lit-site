@@ -29,6 +29,10 @@ with sync_playwright() as pw:
             for path in ("/", "/en/"):
                 page.goto("http://goal-lit.test" + path)
                 page.evaluate("document.fonts.ready")
+                page.locator("img").evaluate_all("""async images => {
+                    for (const img of images) img.loading = 'eager';
+                    await Promise.all(images.map(img => img.decode()));
+                }""")
                 result = page.evaluate("""() => {
                     const style = x => getComputedStyle(x);
                     const rect = x => x.getBoundingClientRect();

@@ -280,3 +280,9 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
  .srow .thumb{width:96px}
  .srow .thumb img{aspect-ratio:1/1}
 }
+
+/* Byline separators are spacing; wording and date values stay verbatim. */
+.meta:has(.byline),.post-byline{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:22px;row-gap:4px}
+.meta .byline,.post-byline .byline{font-size:inherit}
+.date-label{display:inline-flex;align-items:baseline;column-gap:6px}
+time{font-variant-numeric:tabular-nums lining-nums}

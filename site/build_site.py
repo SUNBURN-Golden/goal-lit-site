@@ -333,10 +333,10 @@ def post_card(p, personas, works_by):
     when = f'<time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time>'
     if p.get("type") == "essay":
         return (f'<article class="card"><div class="chips"><span class="badge">{E(w["title"])}</span><span class="badge">{E(p["framing"])}</span></div>'
-                f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><div class="meta">{byline(pe)} · {when}</div></article>')
+                f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><div class="meta">{byline(pe)} {when}</div></article>')
     st = {k: sum(1 for o in p["opinions"] if o["stance"] == k) for k in ("호평", "비판")}
     return (f'<article class="card"><div class="chips"><span class="badge">{E(w["title"])}</span></div>'
-            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p><div class="meta">{byline(pe)} · {when}</div></article>')
+            f'<h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3><p class="card-stats">호평 {st["호평"]} · 비판 {st["비판"]}</p><div class="meta">{byline(pe)} {when}</div></article>')
 
 def first_fig(p):
     for g in (p.get("figures") or []):
@@ -349,21 +349,21 @@ def lead_story(p, personas, works_by):
     subtitle = f'<p class="lead-subtitle">{E(p["subtitle"])}</p>' if p.get("subtitle") else ""
     return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">오늘의 평론</h2><article class="lead-grid">'
             f'<h1><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text">{subtitle}<p class="card-summary">{E(p["summary"])}</p>'
-            f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
+            f'<div class="meta">{byline(pe)} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
             f'<div class="cta-row"><a class="cta cta-main" href="/posts/{p["slug"]}/">평론 읽기 <span aria-hidden="true">→</span></a></div></div>{media}</article></section>')
 
 def story_row(p, personas, works_by):
     pe = personas[p["persona"]]; g = first_fig(p)
     thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
     return (f'<li class="srow"><div class="stext"><h3><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
+            f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline(pe)} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
 
 def story_card(p, personas, works_by):
     pe = personas[p["persona"]]; w = works_by[p["work"]]; g = first_fig(p)
     thumb = (f'<a class="sthumb" href="/posts/{p["slug"]}/" aria-hidden="true" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></a>' if g else "")
     return (f'<article class="scard">{thumb}<div class="chips"><span class="badge">{E(w["title"])}</span></div>'
             f'<h2><a href="/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="ssum">{E(p["summary"])}</p>'
-            f'<div class="meta">{byline(pe)} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
+            f'<div class="meta">{byline(pe)} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
 
 def build(site, dims, personas, works, posts, human, today):
     works_by = {w["slug"]: w for w in works}
@@ -467,7 +467,7 @@ def build(site, dims, personas, works, posts, human, today):
             paras = "".join(para(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
             body = f'''<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
-<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p>
+<p class="post-byline">{byline(pe)}<span class="date-label">작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></span></p>
 <p class="framing">{E(x["framing"])}</p>
 <div class="essay-body">{paras}</div>
 <div class="verify"><p>사실관계가 다른 부분이 있으면 <a href="/corrections/">정정·삭제 요청</a>으로 알려 주세요. 확인하고 고칠게요. 이 글에는 광고나 제휴 링크가 없어요.</p></div>{nxt}</div>'''
@@ -494,7 +494,7 @@ def build(site, dims, personas, works, posts, human, today):
         srcl = "".join(f'<li>{E(s["outlet"])} · <a href="{E(s["url"])}" rel="noopener noreferrer">{E(s["title"])}</a> <span class="muted">({E(s["kind"])}{", " + s["date"] if s["date"] else ", 게재일 미확인"}{"; " + E(s["note"]) if s.get("note") else ""})</span></li>' for s in x["sources"])
         body = f'''<div class="detail post-detail"><p class="crumb"><a href="/reviews/">평론</a> › <a href="/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>{glance}
-<p class="post-byline">{byline(pe)} · 작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p><details class="meta-more"><summary>에디터 소개·검수 상태</summary><span><a href="/personas/{pe["id"]}/">먼저 보는 것 v{pe["version"]}</a> · 검수 전 샘플</span></details>
+<p class="post-byline">{byline(pe)}<span class="date-label">작성 <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></span></p><details class="meta-more"><summary>에디터 소개·검수 상태</summary><span><a href="/personas/{pe["id"]}/">먼저 보는 것 v{pe["version"]}</a> · 검수 전 샘플</span></details>
 <p class="framing">{E(x["framing"])}</p>
 {secs}{opsb}{met}<div class="panels"><div class="panel editors"><h3>이 글의 점수</h3><p>없음. 공개 자료를 정리한 글에는 점수를 매기지 않아요.</p></div><div class="panel human"><h3>사람 평점</h3><p>이 글과 별개로 <a href="/works/{w["slug"]}/">작품 페이지</a>에서 보여 드려요.</p></div></div>
 {lim}<h2>참고한 공개 자료</h2><ul class="clean">{srcl}</ul>
@@ -581,21 +581,21 @@ def build_en(site, personas, works, human):
         media = (f'<figure class="lead-figure"><a class="lead-img" href="/en/posts/{p["slug"]}/" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="{E(g["alt"])}" loading="eager" decoding="async"></a></figure>' if g else "")
         return (f'<section class="front lead-story" aria-labelledby="today-heading"><h2 class="margin-heading" id="today-heading">Featured Criticism</h2><article class="lead-grid">'
                 f'<h1><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h1><div class="lead-text"><p class="card-summary">{E(p["summary"])}</p>'
-                f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
+                f'<div class="meta">{byline_en(p["persona"])} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div>'
                 f'<div class="cta-row"><a class="cta cta-main" href="/en/posts/{p["slug"]}/">Read Essay <span aria-hidden="true">→</span></a></div></div>{media}</article></section>')
 
     def story_row_en(p):
         g = first_fig(p)
         thumb = (f'<div class="thumb"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></div>' if g else "")
         return (f'<li class="srow"><div class="stext"><h3><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h3>'
-                f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
+                f'<p class="ssum">{E(p["summary"])}</p><div class="meta">{byline_en(p["persona"])} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></div>{thumb}</li>')
 
     def story_card_en(p):
         w = works_by[p["work"]]; g = first_fig(p)
         thumb = (f'<a class="sthumb" href="/en/posts/{p["slug"]}/" aria-hidden="true" tabindex="-1"><img src="/assets/img/essays/{E(g["file"])}" alt="" loading="lazy" decoding="async"></a>' if g else "")
         return (f'<article class="scard">{thumb}<div class="chips"><span class="badge">{E(w["title"])}</span></div>'
                 f'<h2><a href="/en/posts/{p["slug"]}/">{E(p["title"])}</a></h2><p class="ssum">{E(p["summary"])}</p>'
-                f'<div class="meta">{byline_en(p["persona"])} · <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
+                f'<div class="meta">{byline_en(p["persona"])} <time datetime="{p["date"]}">{dot(ymd(p["date"]))}</time></div></article>')
 
     def work_card_en(w):
         n = len(pbw.get(w["slug"], []))
@@ -657,7 +657,7 @@ def build_en(site, personas, works, human):
         paras = "".join(para_en(t) + "".join(figs.get(i, [])) for i, t in enumerate(x["body"], 1))
         body = f"""<div class="read-progress" aria-hidden="true"></div><div class="detail post-detail essay"><p class="crumb"><a href="/en/reviews/">Criticism</a> › <a href="/en/works/{w["slug"]}/">{E(w["title"])}</a></p><div class="chips">{genre_chips_en(w["genres"])}</div>
 <h1>{E(x["title"])}</h1>
-<p class="post-byline">{byline_en(x["persona"])} · Published <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></p>
+<p class="post-byline">{byline_en(x["persona"])}<span class="date-label">Published <time datetime="{x["date"]}">{dot(ymd(x["date"]))}</time></span></p>
 <p class="framing">{E(x["framing"])}</p>
 <div class="essay-body">{paras}</div>
 <div class="verify"><p>If any factual statement requires correction, please contact us via <a href="/en/corrections/">Corrections</a>. This column contains no advertisements or affiliate links.</p></div>{nxt}</div>"""
