@@ -127,6 +127,9 @@ if dist.exists():
         if rel.startswith("posts/") and "보관된 글이에요" not in t and rel.split("/")[1] not in {p_["slug"] for p_ in shipped}: print("unshipped post page in dist", rel); bad += 1
         if 'class="detail post-detail essay"' in t and re.search(r"<p>&gt;", t): print("essay block quote rendered as plain paragraph", rel); bad += 1
         if 'class="detail post-detail essay"' in t and ("공개 자료를 정리" in t or "편집부 칼럼" not in t): print("essay page with synthesis notice / without 편집부 칼럼", rel); bad += 1
+        for metadata in re.findall(r'<(?:div|p) class="(?:meta|post-byline)">(.*?)</(?:div|p)>', t, re.S):
+            if 'class="byline"' in metadata and ' · ' in metadata:
+                print("byline date separator must use layout", rel); bad += 1
     print("built-output checks done (%d pages)" % len(txt))
     for home in (dist / "index.html", dist / "en/index.html"):
         t = txt[home]
