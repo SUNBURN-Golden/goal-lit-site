@@ -290,7 +290,8 @@ class Site:
         return (f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
                 f'<title>{E(full)}</title><meta name="description" content="{E(desc)}">\n<meta name="robots" content="index,follow">\n'
                 f'<meta property="og:title" content="{E(full)}"><meta property="og:description" content="{E(desc)}">'
-                f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF9F5"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141414"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+                f'<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F4F5F6"><meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161514"><link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+                f'<link rel="preload" href="/assets/fonts/Hahmlet-subset.woff2" as="font" type="font/woff2" crossorigin>'
                 f'<link rel="stylesheet" href="/assets/css/site.css"></head>')
     def nav(self, active, en_href="/en/"):
         cur = lambda k: ' aria-current="page"' if active == k else ""

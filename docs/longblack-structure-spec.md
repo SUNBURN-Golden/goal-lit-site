@@ -22,6 +22,8 @@
 | 배경 | 흰 종이, 글자 #191919 계열 | |
 
 ## Goal Lit 적용
-- 색: 따뜻한 아이보리 배경 #FAF9F5 + 테라코타 강조 하나(장식 #C96442, 글자·버튼 #B85635). 보라·파스텔 박스는 쓰지 않아요.
+- Superseded 2026-10-26 (owner-approved per-site palette; historical rule): 색: 따뜻한 아이보리 배경 #FAF9F5 + 테라코타 강조 하나(장식 #C96442, 글자·버튼 #B85635). 보라·파스텔 박스는 쓰지 않아요.
 - Superseded 2026-10-26 (owner-approved font decision; historical rule): 폰트: 시스템 폰트 스택(Pretendard 서브셋 유지). 롱블랙 폰트 파일은 쓰지 않음.
 - Current font decision: self-hosted OFL Hahmlet headings with Noto Serif KR fallback, Noto Serif KR 400/700 body. PR1 supplies complete local sources and build-time subsets; PR2 applies the family stacks. Unused Pretendard sources are retired.
+- Current palette: light `#F4F5F6` background, `#1A1B1D` text, `#575B61` muted, `#8E1B2C` accent; dark `#161514`, `#E9E7E3`, `#A7A39D`, `#F08A96` respectively. Accent fills CTAs and draws focus rings. Strong rules use text; decorative hairlines use `#C3C8CE` / `#3A3835`. Focus/skip surfaces use `#EAEDF0` / `#201F1D`; editorial layouts have no card fills.
+- This per-site background/accent/heading-font decision applies throughout Goal Lit, including its English edition. It supersedes any earlier system-font, light-only, or home-colour-only restriction. Historical measurements above remain a record of the reference site, not the current Goal Lit layout. See [design decisions](design-decisions.md).
