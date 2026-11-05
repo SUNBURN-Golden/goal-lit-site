@@ -258,3 +258,16 @@ ul.clean{padding-left:1.2em}ul.clean li{margin:.3em 0}
 .auth-check input[type="checkbox"]{width:20px;height:20px;margin-top:4px;accent-color:var(--action);flex-shrink:0;cursor:pointer}
 .auth-btn{border:0;cursor:pointer;font-family:inherit}
 .auth-note{margin:var(--s-4) 0 0;font-size:var(--fs-2)}
+
+/* Handwritten headings (Excalidraw style): Latin=Excalifont, Korean=Gaegu. Body text unchanged. */
+@font-face{font-family:"Excalifont";src:url(/assets/css/fonts/Excalifont-Regular.woff2) format("woff2");font-display:swap;unicode-range:U+0000-024F,U+2000-206F}
+@font-face{font-family:"Gaegu";src:url(/assets/css/fonts/Gaegu-Regular.woff2) format("woff2");font-display:swap;unicode-range:U+AC00-D7A3,U+3131-318E}
+:root{--hand:"Excalifont","Virgil","Gaegu","Nanum Pen Script",var(--serif)}
+h1,h2,h3,.brand{font-family:var(--hand);font-weight:400}
+h1,h2,h3{word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
+h1,.lead-story h1,.detail h1{font-size:clamp(1.5rem,5vw,2.25rem);line-height:1.2}
+/* Fit featured titles within the desktop half-column and mobile viewport. */
+.lead-story h1{font-size:clamp(1.5rem,3vw,1.75rem);hyphens:none}
+.lead-story h1:lang(en){font-size:clamp(1.25rem,5.5vw,1.625rem)}
+h2,.sec-h h2,.story-list-head h2,.scard h2{font-size:clamp(1.125rem,3.5vw,1.5rem);line-height:1.2}
+h3,.card h3,.panel h3,.limits h3,.srow h3{font-size:clamp(1rem,2.5vw,1.125rem);line-height:1.2}
