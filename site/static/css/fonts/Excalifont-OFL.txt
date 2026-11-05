@@ -1,0 +1,2 @@
+Excalifont by Excalidraw — SIL Open Font License 1.1
+Source: https://github.com/excalidraw/excalidraw/tree/master/packages/excalidraw/fonts/Excalifont
