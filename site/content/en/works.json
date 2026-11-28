@@ -1321,5 +1321,46 @@
       "Publisher series number",
       "Page count and number of included poems"
     ]
+  },
+  "american-hagwon": {
+    "title": "아메리칸 학원",
+    "kind": "Novel",
+    "author_en": "이민진",
+    "platform_en": "현대문학",
+    "summary": "A novel by 이민진, published by 현대문학.",
+    "facts": [
+      [
+        "publisher",
+        "현대문학",
+        3,
+        "https://www.giview.co.kr/news/article.html?no=193558",
+        "www.giview.co.kr"
+      ],
+      [
+        "publisher",
+        "현대문학",
+        3,
+        "https://www.donga.com/news/Culture/article/all/20261119/135056469/1",
+        "www.donga.com"
+      ],
+      [
+        "작품 종류",
+        "장편소설",
+        3,
+        "https://www.giview.co.kr/news/article.html?no=193558",
+        "www.giview.co.kr"
+      ],
+      [
+        "작품 종류",
+        "장편소설",
+        3,
+        "https://www.donga.com/news/Culture/article/all/20261119/135056469/1",
+        "www.donga.com"
+      ]
+    ],
+    "unverified": [
+      "First publication date",
+      "Edition-level textual differences"
+    ]
   }
 }
